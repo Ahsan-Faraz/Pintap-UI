@@ -112,7 +112,7 @@ export default function LinkDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-lg space-y-4">
+      <div className="mx-auto max-w-lg space-y-4 sm:max-w-5xl">
         <Skeleton className="mx-auto h-10 w-48 rounded-[20px]" />
         <Skeleton className="h-52 w-full rounded-[28px]" />
         <Skeleton className="h-32 w-full rounded-[28px]" />
@@ -122,7 +122,7 @@ export default function LinkDetailPage() {
 
   if (!link) {
     return (
-      <div className="mx-auto max-w-lg">
+      <div className="mx-auto max-w-lg sm:max-w-5xl">
         <EmptyState
           title={t("appPages.linkDetail.notFoundTitle")}
           description={t("appPages.linkDetail.notFoundDescription")}
@@ -154,7 +154,7 @@ export default function LinkDetailPage() {
     options?.filter((c) => c.id !== link.campaign?.id) ?? [];
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-lg sm:max-w-5xl">
       {/* Mobile-first top bar */}
       <header className="mb-5 flex items-center justify-between gap-3">
         <Link

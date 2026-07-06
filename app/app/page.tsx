@@ -176,14 +176,21 @@ export default function RecommenderHomePage() {
           href="/app/discover"
         />
         {loading ? (
-          <CardRail>
-            {[0, 1, 2].map((i) => (
-              <Skeleton
-                key={i}
-                className="h-[128px] w-[108px] shrink-0 snap-start rounded-[20px]"
-              />
-            ))}
-          </CardRail>
+          <>
+            <CardRail className="-mx-4 px-4 sm:hidden">
+              {[0, 1, 2].map((i) => (
+                <Skeleton
+                  key={i}
+                  className="shop-rail-item h-[128px] shrink-0 snap-start self-stretch rounded-[20px]"
+                />
+              ))}
+            </CardRail>
+            <div className="hidden gap-4 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-[136px] rounded-[20px]" />
+              ))}
+            </div>
+          </>
         ) : shops.length === 0 ? (
           <div className="clay-surface p-4">
             <EmptyState
@@ -197,13 +204,27 @@ export default function RecommenderHomePage() {
             />
           </div>
         ) : (
-          <CardRail>
-            {shops.map((s) => (
-              <div key={s.id} className="w-[108px] shrink-0 snap-start sm:w-[120px]">
-                <StoreCard store={s} onSelect={() => setSelectedShop(s)} variant="compact" />
-              </div>
-            ))}
-          </CardRail>
+          <>
+            {/* Mobile: horizontal rail */}
+            <CardRail className="-mx-4 px-4 sm:hidden">
+              {shops.map((s) => (
+                <div key={s.id} className="shop-rail-item shrink-0 snap-start self-stretch">
+                  <StoreCard store={s} onSelect={() => setSelectedShop(s)} variant="compact" />
+                </div>
+              ))}
+            </CardRail>
+            {/* Desktop: responsive grid */}
+            <div className="hidden gap-4 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {shops.map((s) => (
+                <StoreCard
+                  key={s.id}
+                  store={s}
+                  onSelect={() => setSelectedShop(s)}
+                  variant="compact"
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
 

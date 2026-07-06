@@ -238,11 +238,28 @@ body {
 
 @media (min-width: 640px) {
   .link-rail-item {
-    flex: 0 0 calc((100% - 0.75rem) / 1.5);
-    width: calc((100% - 0.75rem) / 1.5);
-    min-width: calc((100% - 0.75rem) / 1.5);
-    max-width: min(calc((100% - 0.75rem) / 1.5), 300px);
+    flex: 0 0 260px;
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
   }
+}
+
+@media (min-width: 1024px) {
+  .link-rail-item {
+    flex: 0 0 280px;
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+  }
+}
+
+/* Home shops rail — mobile swipe tiles */
+.shop-rail-item {
+  flex: 0 0 calc((100vw - 2rem - 1.5rem) / 3.2);
+  width: calc((100vw - 2rem - 1.5rem) / 3.2);
+  min-width: calc((100vw - 2rem - 1.5rem) / 3.2);
+  max-width: calc((100vw - 2rem - 1.5rem) / 3.2);
 }
 
 /* Shared focus ring for interactive elements */

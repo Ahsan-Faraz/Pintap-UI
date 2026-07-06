@@ -28,9 +28,9 @@ export default function StoreCard({
         <Thumb
           src={logoSrc}
           alt={store.name}
-          className="h-[4.25rem] w-[4.25rem] shrink-0 rounded-[14px] bg-white/90 p-1"
+          className="h-[4.25rem] w-[4.25rem] shrink-0 rounded-[14px] bg-white/90 p-1 sm:h-[4.75rem] sm:w-[4.75rem] lg:h-20 lg:w-20"
         />
-        <p className="line-clamp-2 text-center text-xs font-bold text-navy">
+        <p className="line-clamp-2 text-center text-xs font-bold text-navy sm:text-sm">
           {store.name}
         </p>
       </div>
@@ -79,7 +79,7 @@ export default function StoreCard({
   const className = cn(
     "flex h-full w-full flex-col text-left transition-[transform,box-shadow] focus-ring active:scale-[0.98]",
     variant === "compact"
-      ? "clay-surface-sm min-h-[128px] p-3 hover:-translate-y-0.5"
+      ? "clay-surface-sm min-h-[128px] p-3 hover:-translate-y-0.5 sm:min-h-[136px] sm:p-4"
       : "rounded-card border border-navy/10 bg-surface p-4 shadow-card hover:-translate-y-0.5 hover:border-orange/30 hover:shadow-float",
   );
 
