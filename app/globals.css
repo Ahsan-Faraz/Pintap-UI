@@ -1,0 +1,265 @@
+@import "tailwindcss";
+
+/*
+ * Pintap design tokens — aligned with the Pintap Studio UI spec.
+ * Tailwind v4: every --color-* / --radius-* / --shadow-* below is exposed as a
+ * utility. Both the short brand names (bg-navy, text-orange) and the spec's
+ * brand-prefixed aliases (bg-brand-navy, text-accent-blue) resolve to the same
+ * values, so existing markup and spec-style markup both work.
+ */
+@theme {
+  /* Brand palette */
+  --color-navy: #002e51;
+  --color-orange: #fa5004;
+  --color-orange-hover: #ff7944;
+  --color-yellow: #fffd57;
+  --color-yellow-soft: #fefcdf;
+  --color-green: #45db89;
+  --color-green-dark: #667237;
+  --color-green-darker: #4a5327;
+  --color-beige: #ece7e4;
+  --color-blue: #41c9fe;
+  --color-pink: #fab0e8;
+  --color-coral: #e8826e; /* warm salmon — consumer resolver CTA */
+  --color-purple: #6560ef;
+  --color-stroke: #e0dfe4; /* "UI gray" — borders & dividers */
+
+  /* Spec-aligned aliases (Pintap Studio names) */
+  --color-brand-navy: #002e51;
+  --color-brand-orange: #fa5004;
+  --color-brand-yellow: #fffd57;
+  --color-brand-green: #45db89;
+  --color-brand-beige: #ece7e4;
+  --color-accent-blue: #41c9fe;
+  --color-accent-pink: #fab0e8;
+  --color-accent-purple: #6560ef;
+  --color-ui-gray: #e0dfe4;
+
+  /* Semantic aliases */
+  --color-background: #f6f2ef; /* soft page background (spec --background) */
+  --color-surface: #ffffff; /* white content surfaces */
+  --color-foreground: #002e51; /* navy text */
+  --color-primary: #fa5004; /* orange primary CTA */
+  --color-positive: #45db89; /* earned / positive values */
+  --color-info: #41c9fe; /* informational accents */
+
+  /* Typography — Inter per the brand style guide. */
+  --font-sans: var(--font-inter), "Inter", "Avenir Next", "Segoe UI",
+    sans-serif;
+
+  /* Radii (inputs/buttons 12px, cards 16-24px) */
+  --radius-input: 12px;
+  --radius-card: 16px;
+  --radius-xl3: 24px;
+
+  /* Restrained, floaty shadows (navy-tinted) */
+  --shadow-card:
+    0 1px 2px rgba(0, 46, 81, 0.04), 0 12px 30px rgba(0, 46, 81, 0.07);
+  --shadow-float: 0 22px 50px rgba(0, 46, 81, 0.1);
+  --shadow-rail: 0 18px 42px rgba(0, 46, 81, 0.12);
+  --shadow-pop: 0 16px 48px rgba(0, 46, 81, 0.18);
+
+  /*
+   * Motion — short, soft entrances shared by overlays, menus and page loads.
+   * Each token becomes an `animate-*` utility (so responsive variants work,
+   * e.g. `animate-sheet-up sm:animate-scale-in`). All are neutralised by the
+   * prefers-reduced-motion block below.
+   */
+  /* NOTE: fade-in/fade-up use `backwards` fill — they run on containers of
+     position:fixed overlays, and a lingering (filled) transform would turn the
+     container into a containing block that traps modals/drawers. */
+  --animate-fade-in: pintap-fade-in 200ms ease-out backwards;
+  --animate-fade-up: pintap-fade-up 360ms cubic-bezier(0.22, 1, 0.36, 1)
+    backwards;
+  --animate-scale-in: pintap-scale-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-sheet-up: pintap-sheet-up 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-slide-in-right: pintap-slide-in-right 300ms
+    cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-dropdown-in: pintap-dropdown-in 160ms ease-out both;
+  --animate-toast-in: pintap-toast-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: rgba(250, 80, 4, 0.14);
+  text-rendering: optimizeLegibility;
+  touch-action: manipulation;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-stroke) transparent;
+}
+
+/*
+ * Signature Pintap Studio "mesh" backgrounds — soft brand-tinted radial glows
+ * layered over a beige→white vertical wash. Reused by the portal shells and
+ * the auth surfaces so the whole app shares one atmosphere.
+ */
+.bg-app-mesh {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(65, 201, 254, 0.16), transparent 45%),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(250, 80, 4, 0.09),
+      transparent 44%
+    ),
+    linear-gradient(180deg, #ece7e4 0%, #f6f3f1 58%, #ffffff 100%);
+}
+
+.bg-auth-mesh {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(65, 201, 254, 0.2), transparent 42%),
+    radial-gradient(circle at 0% 100%, rgba(250, 80, 4, 0.12), transparent 40%),
+    linear-gradient(155deg, #ece7e4 0%, #f8f5f3 58%, #ffffff 100%);
+}
+
+.bg-register-mesh {
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(65, 201, 254, 0.24),
+      transparent 44%
+    ),
+    radial-gradient(circle at 0% 100%, rgba(250, 80, 4, 0.15), transparent 43%),
+    linear-gradient(160deg, #ece7e4 0%, #f8f5f3 50%, #ffffff 100%);
+}
+
+/* Shared focus ring for interactive elements */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 300;
+  transform: translateY(-150%);
+  border-radius: var(--radius-input);
+  background: var(--color-navy);
+  color: white;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+td,
+th {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Stop mobile browsers (iOS Safari especially) from auto-zooming when a form
+ * control is focused: they do this whenever the control's font-size is under
+ * 16px, and the page then stays zoomed in — even after client-side navigation.
+ * Forcing 16px on small screens prevents the zoom entirely; desktop keeps its
+ * smaller `text-sm` fields (the query stops below the `sm` breakpoint).
+ * `!important` is required to win over the Tailwind `text-sm` on the fields.
+ */
+@media screen and (max-width: 639.98px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes pintap-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Entrance keyframes for the --animate-* tokens above. */
+@keyframes pintap-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* IMPORTANT: fade-up wraps ENTIRE pages (RecommenderShell, auth layout). It
+   must never gate visibility with opacity: browsers freeze animation
+   timelines at t=0 when the tab is hidden/emulated/battery-saving (seen in
+   Opera device mode), which left the whole app rendered blank. Transform-only
+   keyframes fail gracefully — worst case the content sits 10px low. */
+@keyframes pintap-fade-up {
+  from {
+    transform: translateY(10px);
+  }
+}
+
+/* scale-in / dropdown-in / toast-in are transform-only for the same
+   stalled-timeline reason as fade-up above (they animate dialogs and menus —
+   an opacity:0 start frame would make them unopenable when stalled). */
+@keyframes pintap-scale-in {
+  from {
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+@keyframes pintap-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes pintap-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pintap-dropdown-in {
+  from {
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes pintap-toast-in {
+  from {
+    transform: translateY(12px) scale(0.97);
+  }
+}

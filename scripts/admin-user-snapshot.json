@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "capturedAt": "2026-07-02T00:00:00.000Z",
+    "sourceProjectRef": "gdcyztbupojpmbnsnmwr",
+    "sourceProjectName": "pintap",
+    "targetProjectRef": "hudtnxauwaranhddjakn",
+    "targetProjectName": "pintap-test",
+    "seededAt": "2026-07-02",
+    "purpose": "Snapshot of admin@pintap.com before switching Supabase project keys. Use this spec when re-seeding the new project.",
+    "reseedCommand": "node scripts/seed-demo.mjs",
+    "notes": [
+      "Auth user UUID will differ on the new project — only email/password/roles/profile fields are portable.",
+      "Current DB profile uses first_name=admin (likely manual signup). seed-demo.mjs uses Jordan Blake — pick one at re-seed time.",
+      "store_members is empty for this admin on the current DB; seed-demo.mjs would assign Aurora Goods owner if full seed runs."
+    ]
+  },
+  "auth": {
+    "email": "admin@pintap.com",
+    "password": "Pintap2026!",
+    "emailConfirmed": true,
+    "provider": "email",
+    "legacyUserId": "b74bb078-1d2b-433c-9e51-4cf663c2c0bf",
+    "newProjectUserId": "62b3d6e7-1524-43f3-8c38-cf6062540419",
+    "userMetadataFromDb": {
+      "first_name": "admin",
+      "email_verified": true
+    },
+    "userMetadataFromSeedScript": {
+      "first_name": "Jordan",
+      "last_name": "Blake"
+    },
+    "timestamps": {
+      "created_at": "2026-06-29T12:29:13.228099+00:00",
+      "updated_at": "2026-07-01T20:31:27.065176+00:00",
+      "last_sign_in_at": "2026-07-01T20:31:27.042027+00:00"
+    }
+  },
+  "profileFromDb": {
+    "email": "admin@pintap.com",
+    "first_name": "admin",
+    "last_name": "",
+    "avatar_url": null,
+    "phone": null,
+    "country": null,
+    "accepted_terms": false
+  },
+  "profileFromSeedScript": {
+    "email": "admin@pintap.com",
+    "first_name": "Jordan",
+    "last_name": "Blake"
+  },
+  "roles": ["user", "merchant", "admin"],
+  "rolesDetailFromDb": [
+    { "role": "user", "granted_by": null, "created_at": "2026-06-29T12:29:13.227784+00:00" },
+    { "role": "admin", "granted_by": null, "created_at": "2026-06-29T12:29:13.406012+00:00" },
+    { "role": "merchant", "granted_by": null, "created_at": "2026-06-30T09:46:29.90151+00:00" }
+  ],
+  "storeMembersFromDb": [],
+  "storeMembersFromSeedScript": [
+    {
+      "store_slug": "aurora-goods",
+      "store_name": "Aurora Goods",
+      "merchant_domain": "auroragoods.com",
+      "role": "owner"
+    }
+  ],
+  "loginExpectations": {
+    "defaultPath": "/admin",
+    "workspaceSwitcherRoles": ["user", "merchant", "admin"]
+  }
+}
