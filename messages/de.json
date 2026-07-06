@@ -238,15 +238,15 @@
     "user": {
       "greeting": "Hallo, {name}",
       "welcomeBack": "Willkommen zurück",
-      "subtitle": "So entwickeln sich deine Empfehlungen.",
-      "totalClicks": "Klicks gesamt",
+      "subtitle": "Was möchtest du heute empfehlen?",
+      "totalClicks": "Klicks",
       "orders": "Verkäufe",
       "conversion": "Konversion",
       "commission": "Provision",
       "quickCreateTitle": "Erstelle einen Link in Sekunden",
       "quickCreateSubtitle": "Füge eine Produkt- oder Shop-URL ein.",
       "quickCreatePlaceholder": "https://shop.com/produkte/…",
-      "myActiveLinks": "Meine aktiven Links",
+      "myActiveLinks": "Meine Links",
       "noLinksTitle": "Noch keine Links",
       "noLinksDesc": "Erstelle deinen ersten Empfehlungslink, um zu verdienen.",
       "createLink": "Link erstellen",
@@ -517,6 +517,9 @@
       "termsNotice": "Mit dem Erstellen dieses Links stimmst du den Pintap-Empfehlerbedingungen zu."
     },
     "linkDetail": {
+      "pageTitle": "Link-Details",
+      "yourLink": "Dein Link",
+      "renameLink": "Link umbenennen",
       "notFoundTitle": "Link nicht gefunden",
       "notFoundDescription": "Dieser Link wurde möglicherweise gelöscht.",
       "copyLink": "Link kopieren",

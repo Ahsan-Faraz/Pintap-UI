@@ -7,6 +7,7 @@ import {
   Activity,
   AlertTriangle,
   ArrowDownRight,
+  ArrowLeft,
   ArrowUpRight,
   Bell,
   Camera,
@@ -31,6 +32,7 @@ import {
   LogOut,
   type LucideProps,
   Menu,
+  Pencil,
   Plus,
   Receipt,
   Search,
@@ -83,6 +85,8 @@ export const SearchIcon = make(Search);
 export const MenuIcon = make(Menu);
 export const XIcon = make(X);
 export const ChevronRightIcon = make(ChevronRight);
+export const ArrowLeftIcon = make(ArrowLeft);
+export const PencilIcon = make(Pencil);
 export const ChevronDownIcon = make(ChevronDown);
 export const ChevronUpIcon = make(ChevronUp);
 export const ExternalLinkIcon = make(ExternalLink);

@@ -201,7 +201,7 @@ export default function RecommenderShell({
                   key={it.href}
                   href={it.href}
                   aria-label={t("nav.create")}
-                  className="grid h-12 w-12 -translate-y-3 touch-manipulation place-items-center rounded-full bg-orange text-white shadow-pop transition-transform duration-150 active:scale-90 focus-ring"
+                  className="clay-btn-orange grid h-12 w-12 -translate-y-3 touch-manipulation place-items-center rounded-full transition-transform duration-150 active:scale-90 focus-ring"
                 >
                   <PlusIcon />
                 </Link>
@@ -213,12 +213,16 @@ export default function RecommenderShell({
                 href={it.href}
                 onClick={() => setPendingHref(it.href)}
                 className={cn(
-                  // touch-manipulation kills the mobile double-tap-zoom delay
-                  // (client reported needing 2+ taps to switch tabs).
-                  "flex flex-1 touch-manipulation flex-col items-center gap-0.5 rounded-input py-1 text-[11px] font-semibold transition-colors focus-ring",
+                  "relative flex flex-1 touch-manipulation flex-col items-center gap-0.5 rounded-input py-1 text-[11px] font-semibold transition-colors focus-ring",
                   active ? "text-orange" : "text-navy/55 hover:text-navy",
                 )}
               >
+                {active && (
+                  <span
+                    aria-hidden
+                    className="absolute -top-1.5 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-orange"
+                  />
+                )}
                 <span
                   className={cn(
                     "grid h-7 w-7 place-items-center rounded-full transition-colors [&>svg]:h-5 [&>svg]:w-5",

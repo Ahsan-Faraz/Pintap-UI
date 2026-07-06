@@ -3,10 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import PageHeader from "@/components/ui/PageHeader";
-import { Section } from "@/components/ui/Card";
 import Button, { buttonClasses } from "@/components/ui/Button";
-import Badge, { StatusBadge } from "@/components/ui/Badge";
+import Badge from "@/components/ui/Badge";
 import { Field, Input, Select } from "@/components/ui/Input";
 import Thumb from "@/components/ui/Thumb";
 import Skeleton from "@/components/ui/Skeleton";
@@ -19,12 +17,15 @@ import { useT } from "@/context/I18nProvider";
 import { translateError } from "@/lib/i18n/errors";
 import type { Translator } from "@/lib/i18n/translate";
 import {
-  ActivityIcon,
+  ArrowLeftIcon,
+  ChevronRightIcon,
   ExternalLinkIcon,
-  InfoIcon,
-  SettingsIcon,
+  PencilIcon,
+  ShareIcon,
   TagIcon,
+  TrashIcon,
 } from "@/components/ui/icons";
+import { cn } from "@/lib/utils";
 import { useAsync } from "@/lib/hooks";
 import { linksService } from "@/services";
 import type { CampaignSummary, LinkType } from "@/lib/types";
@@ -40,6 +41,12 @@ function linkTypeLabel(t: Translator, type: string): string {
   if (type === "shop") return t("appPages.linkDetail.typeShop");
   if (type === "other") return t("appPages.linkDetail.typeOther");
   return type;
+}
+
+function statusDotColor(status: string): string {
+  if (status === "active") return "bg-green";
+  if (status === "inactive") return "bg-navy/30";
+  return "bg-red-400";
 }
 
 export default function LinkDetailPage() {
@@ -63,6 +70,8 @@ export default function LinkDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [switchTo, setSwitchTo] = useState<CampaignSummary | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [showCampaignOptions, setShowCampaignOptions] = useState(false);
 
   async function run<T>(fn: () => Promise<T>, success: string) {
     setBusy(true);
@@ -81,18 +90,39 @@ export default function LinkDetailPage() {
     }
   }
 
+  async function shareLink(url: string) {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: link?.name, url });
+        return;
+      } catch {
+        /* User cancelled or share unavailable — fall through to copy. */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: t("common.copied"), variant: "success" });
+    } catch {
+      toast({
+        title: t("appPages.linkDetail.somethingWrong"),
+        variant: "error",
+      });
+    }
+  }
+
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
+      <div className="mx-auto max-w-lg space-y-4">
+        <Skeleton className="mx-auto h-10 w-48 rounded-[20px]" />
+        <Skeleton className="h-52 w-full rounded-[28px]" />
+        <Skeleton className="h-32 w-full rounded-[28px]" />
       </div>
     );
   }
 
   if (!link) {
     return (
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-lg">
         <EmptyState
           title={t("appPages.linkDetail.notFoundTitle")}
           description={t("appPages.linkDetail.notFoundDescription")}
@@ -107,243 +137,281 @@ export default function LinkDetailPage() {
   }
 
   const nameValue = name ?? link.name;
-  // Links with a commission in any status must not be deletable (client req).
   const hasCommission =
     link.metrics.orders > 0 || link.metrics.commissionMinor !== 0;
 
+  const destinationShort = (() => {
+    try {
+      const u = new URL(link.destinationUrl);
+      const path = u.pathname.length > 12 ? `${u.pathname.slice(0, 12)}…` : u.pathname;
+      return `${u.hostname}${path}`;
+    } catch {
+      return link.destinationUrl;
+    }
+  })();
+
+  const switchOptions =
+    options?.filter((c) => c.id !== link.campaign?.id) ?? [];
+
   return (
-    <div className="mx-auto max-w-4xl">
-      <PageHeader
-        title={link.name}
-        breadcrumbs={
-          <Link href="/app/links" className="rounded-input hover:text-navy focus-ring">
-            ← {t("appPages.linkDetail.backToLinks")}
-          </Link>
-        }
-        actions={
-          <>
-            <CopyButton value={link.shortUrl} label={t("appPages.linkDetail.copyLink")} />
-            <a
-              href={`/l/${link.shortCode}`}
-              target="_blank"
-              rel="noreferrer"
-              className={buttonClasses({ variant: "secondary" })}
-            >
-              <ExternalLinkIcon className="h-4 w-4" />
-              {t("appPages.linkDetail.preview")}
-            </a>
-          </>
-        }
-      />
+    <div className="mx-auto max-w-lg">
+      {/* Mobile-first top bar */}
+      <header className="mb-5 flex items-center justify-between gap-3">
+        <Link
+          href="/app/links"
+          aria-label={t("appPages.linkDetail.backToLinks")}
+          className="clay-icon-btn grid h-10 w-10 shrink-0 place-items-center text-navy focus-ring"
+        >
+          <ArrowLeftIcon className="h-5 w-5" />
+        </Link>
+        <h1 className="flex-1 text-center text-base font-extrabold text-navy">
+          {t("appPages.linkDetail.pageTitle")}
+        </h1>
+        <button
+          type="button"
+          aria-label={t("linkPreview.share")}
+          onClick={() => shareLink(link.shortUrl)}
+          className="clay-icon-btn grid h-10 w-10 shrink-0 place-items-center text-navy focus-ring"
+        >
+          <ShareIcon className="h-5 w-5" />
+        </button>
+      </header>
 
-      {/* min-w-0 on the grid columns: grid items default to min-width:auto, so a
-          long unbroken URL would blow the column out past the mobile viewport. */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="min-w-0 space-y-4 lg:col-span-2">
-          <Section title={t("appPages.linkDetail.overview")} icon={<InfoIcon />}>
-            <div className="flex gap-4">
-              <Thumb
-                src={link.imageUrl}
-                alt={link.name}
-                fit="contain"
-                className="h-24 w-24 shrink-0 rounded-input bg-white p-1"
-              />
-              <div className="min-w-0 space-y-1 text-sm">
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={link.status} />
-                  <Badge tone="neutral">{linkTypeLabel(t, link.type)}</Badge>
-                </div>
-                <p className="text-navy/60">
-                  {t("appPages.linkDetail.store")}:{" "}
-                  <span className="font-semibold text-navy">
-                    {link.store?.name ?? "—"}
-                  </span>
-                </p>
-                {link.brand && (
-                  <p className="text-navy/60">
-                    {t("appPages.linkDetail.brand")}:{" "}
-                    <span className="text-navy">{link.brand}</span>
-                  </p>
-                )}
-                <p className="truncate text-navy/60">
-                  {t("appPages.linkDetail.destination")}:{" "}
-                  <a
-                    href={link.destinationUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-input text-orange hover:underline focus-ring"
-                  >
-                    {link.destinationUrl}
-                  </a>
-                </p>
-              </div>
+      {/* Product overview + stats */}
+      <div className="clay-surface mb-4 p-4 sm:p-5">
+        <div className="flex gap-3.5">
+          <Thumb
+            src={link.imageUrl}
+            alt={link.name}
+            fit="contain"
+            className="h-[72px] w-[72px] shrink-0 rounded-[16px] bg-white/90 p-1.5"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="font-extrabold text-navy [overflow-wrap:anywhere]">
+              {link.name}
+            </p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0c7a45]">
+                <span
+                  className={cn("h-2 w-2 rounded-full", statusDotColor(link.status))}
+                />
+                {t(`status.${link.status}`) === `status.${link.status}`
+                  ? link.status
+                  : t(`status.${link.status}`)}
+              </span>
+              <Badge tone="neutral" className="text-[10px]">
+                {linkTypeLabel(t, link.type)}
+              </Badge>
             </div>
-
-            <div className="mt-4 space-y-3">
-              <div>
-                <p className="mb-1 text-xs font-semibold text-navy/55">
-                  {t("appPages.linkDetail.resolverUrl")}
-                </p>
-                <CopyField value={link.resolverUrl} label={t("appPages.linkDetail.copy")} />
-              </div>
-
-              {link.discountCode && (
-                <div>
-                  <p className="mb-1 text-xs font-semibold text-navy/55">
-                    {t("appPages.linkDetail.discountCode")}
-                  </p>
-                  <div className="flex items-center gap-2 rounded-input border border-stroke bg-green/10 px-3 py-2">
-                    <span className="flex-1 font-bold tracking-wide text-navy">
-                      {link.discountCode}
-                    </span>
-                    <CopyButton value={link.discountCode} variant="icon" />
-                  </div>
-                </div>
-              )}
-
-              {link.terms && (
-                <div>
-                  <p className="mb-1 text-xs font-semibold text-navy/55">
-                    {t("appPages.linkDetail.campaignTerms")}
-                  </p>
-                  <p className="text-sm text-navy/65">{link.terms}</p>
-                </div>
-              )}
-            </div>
-          </Section>
-
-          <Section title={t("appPages.linkDetail.campaign")} icon={<TagIcon />}>
-            {link.campaign ? (
-              <div className="flex items-center justify-between gap-3 rounded-card border border-stroke p-3">
-                <div>
-                  <p className="font-semibold text-navy">{link.campaign.name}</p>
-                  <p className="text-xs text-navy/55">
-                    {t("appPages.linkDetail.campaignMeta", {
-                      discount: formatPercent(link.campaign.discountPercent),
-                      commission: formatPercent(link.campaign.commissionPercent),
-                    })}
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConfirmRemove(true)}
-                  disabled={busy}
-                >
-                  {t("appPages.linkDetail.remove")}
-                </Button>
-              </div>
-            ) : (
-              <p className="text-sm text-navy/60">
-                {t("appPages.linkDetail.noCampaignConnected")}
-              </p>
-            )}
-
-            {options && options.length > 0 && (
-              <div className="mt-4">
-                <p className="mb-2 text-xs font-semibold text-navy/55">
-                  {link.campaign
-                    ? t("appPages.linkDetail.switchCampaign")
-                    : t("appPages.linkDetail.availableCampaigns")}
-                </p>
-                <div className="space-y-2">
-                  {options
-                    .filter((c) => c.id !== link.campaign?.id)
-                    .map((c) => (
-                      <div
-                        key={c.id}
-                        className="flex items-center justify-between gap-3 rounded-card border border-stroke p-3"
-                      >
-                        <div>
-                          <p className="font-semibold text-navy">{c.name}</p>
-                          <p className="text-xs text-navy/55">
-                            {t("appPages.linkDetail.campaignMeta", {
-                              discount: formatPercent(c.discountPercent),
-                              commission: formatPercent(c.commissionPercent),
-                            })}{" "}
-                            · {t("appPages.linkDetail.codesAvailable", {
-                              count: c.codesAvailable,
-                            })}
-                          </p>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={busy || c.codesAvailable === 0}
-                          onClick={() =>
-                            link.campaign
-                              ? setSwitchTo(c)
-                              : run(
-                                  () =>
-                                    linksService.connectCampaign(link.id, c.id),
-                                  t("appPages.linkDetail.campaignConnected"),
-                                )
-                          }
-                        >
-                          {link.campaign
-                            ? t("appPages.linkDetail.switch")
-                            : t("appPages.linkDetail.connect")}
-                        </Button>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-          </Section>
+            <p className="mt-1 truncate text-xs text-navy/50">
+              {link.store?.name ?? link.brand ?? "—"}
+              {destinationShort ? ` · ${destinationShort}` : ""}
+            </p>
+          </div>
         </div>
 
-        <div className="min-w-0 space-y-4">
-          <Section title={t("appPages.linkDetail.performance")} icon={<ActivityIcon />}>
-            <div className="space-y-3">
-              <Stat label={t("links.clicks")} value={formatNumber(link.metrics.clicks)} />
-              <Stat label={t("links.orders")} value={formatNumber(link.metrics.orders)} />
-              <Stat
-                label={t("dashboard.user.commission")}
-                value={formatCurrencyMinor(
-                  link.metrics.commissionMinor,
-                  link.metrics.currency,
-                )}
-                accent
-              />
-            </div>
-            <div className="mt-4 border-t border-stroke pt-3 text-xs text-navy/50">
-              <p>{t("appPages.linkDetail.created", { date: formatDate(link.createdAt) })}</p>
-              <p>{t("appPages.linkDetail.updated", { date: formatDate(link.updatedAt) })}</p>
-            </div>
-          </Section>
+        <hr className="clay-divider-dotted my-4" />
 
-          <Section title={t("appPages.linkDetail.settings")} icon={<SettingsIcon />}>
-            <div className="space-y-4">
-              <Field label={t("appPages.linkDetail.displayName")} htmlFor="name">
-                <Input
-                  id="name"
-                  name="link-display-name"
-                  autoComplete="off"
-                  value={nameValue}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </Field>
-              <Field label={t("appPages.linkDetail.type")} htmlFor="type">
-                <Select
-                  id="type"
-                  name="link-type"
-                  autoComplete="off"
-                  value={link.type}
-                  onChange={(e) =>
-                    run(
-                      () =>
-                        linksService.updateLink(link.id, {
-                          type: e.target.value as LinkType,
-                        }),
-                      t("appPages.linkDetail.typeUpdated"),
-                    )
-                  }
-                >
-                  <option value="product">{t("appPages.linkDetail.typeProduct")}</option>
-                  <option value="shop">{t("appPages.linkDetail.typeShop")}</option>
-                  <option value="other">{t("appPages.linkDetail.typeOther")}</option>
-                </Select>
-              </Field>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <DetailStat label={t("links.clicks")} value={formatNumber(link.metrics.clicks)} />
+          <DetailStat label={t("links.orders")} value={formatNumber(link.metrics.orders)} />
+          <DetailStat
+            label={t("links.earned")}
+            value={formatCurrencyMinor(
+              link.metrics.commissionMinor,
+              link.metrics.currency,
+            )}
+            accent
+          />
+        </div>
+      </div>
+
+      {/* Your link */}
+      <div className="clay-surface mb-4 p-4 sm:p-5">
+        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-navy/45">
+          {t("appPages.linkDetail.yourLink")}
+        </p>
+        <CopyField
+          value={link.shortUrl}
+          label={t("appPages.linkDetail.copy")}
+          variant="orange"
+        />
+
+        {link.discountCode && (
+          <div className="mt-3 flex items-center gap-2 rounded-[16px] border-2 border-dashed border-green/50 bg-green/10 px-3.5 py-2.5">
+            <span className="flex-1 font-bold tracking-wide text-navy">
+              {link.discountCode}
+            </span>
+            <CopyButton value={link.discountCode} variant="icon" />
+          </div>
+        )}
+
+        {link.terms && (
+          <p className="mt-3 text-xs text-navy/55">{link.terms}</p>
+        )}
+      </div>
+
+      {/* Campaign */}
+      <div className="clay-surface mb-4 p-4 sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-navy/45">
+            {t("appPages.linkDetail.campaign")}
+          </p>
+          {link.campaign && switchOptions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowCampaignOptions((v) => !v)}
+              className="text-sm font-bold text-orange focus-ring rounded-[8px]"
+            >
+              {t("appPages.linkDetail.switch")}
+            </button>
+          )}
+        </div>
+
+        {link.campaign ? (
+          <>
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] bg-green/20 text-[#0c7a45]">
+                <TagIcon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-extrabold text-navy">{link.campaign.name}</p>
+                <p className="mt-0.5 text-sm text-navy/60">
+                  {t("appPages.linkDetail.campaignMeta", {
+                    discount: formatPercent(link.campaign.discountPercent),
+                    commission: formatPercent(link.campaign.commissionPercent),
+                  })}
+                </p>
+                {options && (
+                  <p className="mt-1.5 text-xs text-navy/45">
+                    {t("appPages.linkDetail.codesAvailable", {
+                      count:
+                        options.find((o) => o.id === link.campaign?.id)
+                          ?.codesAvailable ?? 0,
+                    })}
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmRemove(true)}
+                disabled={busy}
+                className="shrink-0 text-navy/45"
+              >
+                {t("appPages.linkDetail.remove")}
+              </Button>
+            </div>
+
+            {showCampaignOptions && switchOptions.length > 0 && (
+              <div className="mt-4 space-y-2 border-t border-dotted border-navy/12 pt-4">
+                {switchOptions.map((c) => (
+                  <div
+                    key={c.id}
+                    className="clay-inset flex items-center justify-between gap-3 p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-navy">{c.name}</p>
+                      <p className="text-xs text-navy/55">
+                        {t("appPages.linkDetail.campaignMeta", {
+                          discount: formatPercent(c.discountPercent),
+                          commission: formatPercent(c.commissionPercent),
+                        })}{" "}
+                        ·{" "}
+                        {t("appPages.linkDetail.codesAvailable", {
+                          count: c.codesAvailable,
+                        })}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={busy || c.codesAvailable === 0}
+                      onClick={() => setSwitchTo(c)}
+                    >
+                      {t("appPages.linkDetail.switch")}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-navy/60">
+              {t("appPages.linkDetail.noCampaignConnected")}
+            </p>
+            {switchOptions.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {switchOptions.map((c) => (
+                  <div
+                    key={c.id}
+                    className="clay-inset flex items-center justify-between gap-3 p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-semibold text-navy">{c.name}</p>
+                      <p className="text-xs text-navy/55">
+                        {t("appPages.linkDetail.campaignMeta", {
+                          discount: formatPercent(c.discountPercent),
+                          commission: formatPercent(c.commissionPercent),
+                        })}{" "}
+                        ·{" "}
+                        {t("appPages.linkDetail.codesAvailable", {
+                          count: c.codesAvailable,
+                        })}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      disabled={busy || c.codesAvailable === 0}
+                      onClick={() =>
+                        run(
+                          () => linksService.connectCampaign(link.id, c.id),
+                          t("appPages.linkDetail.campaignConnected"),
+                        )
+                      }
+                    >
+                      {t("appPages.linkDetail.connect")}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Action menu */}
+      <div className="clay-surface mb-4 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setRenameOpen((v) => !v)}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-navy/[0.03] focus-ring"
+        >
+          <PencilIcon className="h-5 w-5 shrink-0 text-navy/55" />
+          <span className="flex-1 font-semibold text-navy">
+            {t("appPages.linkDetail.renameLink")}
+          </span>
+          <ChevronRightIcon
+            className={cn(
+              "h-5 w-5 text-navy/30 transition",
+              renameOpen && "rotate-90",
+            )}
+          />
+        </button>
+
+        {renameOpen && (
+          <div className="border-t border-dotted border-navy/12 px-4 py-4">
+            <Field label={t("appPages.linkDetail.displayName")} htmlFor="name">
+              <Input
+                id="name"
+                name="link-display-name"
+                autoComplete="off"
+                value={nameValue}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </Field>
+            <div className="mt-3 flex gap-2">
               <Button
                 variant="secondary"
                 fullWidth
@@ -357,53 +425,133 @@ export default function LinkDetailPage() {
               >
                 {t("appPages.linkDetail.saveName")}
               </Button>
-
-              <div className="border-t border-stroke pt-4">
-                {link.status === "active" ? (
-                  <Button
-                    variant="secondary"
-                    fullWidth
-                    disabled={busy}
-                    onClick={() =>
-                      run(
-                        () => linksService.setStatus(link.id, "inactive"),
-                        t("appPages.linkDetail.deactivated"),
-                      )
-                    }
-                  >
-                    {t("appPages.linkDetail.deactivate")}
-                  </Button>
-                ) : link.status === "inactive" ? (
-                  <Button
-                    fullWidth
-                    disabled={busy}
-                    onClick={() =>
-                      run(
-                        () => linksService.setStatus(link.id, "active"),
-                        t("appPages.linkDetail.activated"),
-                      )
-                    }
-                  >
-                    {t("appPages.linkDetail.activate")}
-                  </Button>
-                ) : null}
-                <Button
-                  variant="danger"
-                  fullWidth
-                  className="mt-2"
-                  disabled={busy || link.status === "deleted" || hasCommission}
-                  onClick={() => setConfirmDelete(true)}
-                >
-                  {t("appPages.linkDetail.deleteLink")}
-                </Button>
-                {hasCommission && (
-                  <p className="mt-2 text-xs text-navy/55">
-                    {t("appPages.linkDetail.deleteBlocked")}
-                  </p>
-                )}
-              </div>
             </div>
-          </Section>
+          </div>
+        )}
+
+        <hr className="clay-divider-dotted mx-4" />
+
+        <button
+          type="button"
+          disabled={busy || link.status === "deleted" || hasCommission}
+          onClick={() => setConfirmDelete(true)}
+          className={cn(
+            "flex w-full flex-col items-start gap-0.5 px-4 py-3.5 text-left focus-ring",
+            hasCommission || link.status === "deleted"
+              ? "cursor-not-allowed opacity-45"
+              : "hover:bg-navy/[0.03]",
+          )}
+        >
+          <span className="flex w-full items-center gap-3">
+            <TrashIcon className="h-5 w-5 shrink-0 text-navy/55" />
+            <span className="flex-1 font-semibold text-navy/55">
+              {t("appPages.linkDetail.deleteLink")}
+            </span>
+          </span>
+          {hasCommission && (
+            <span className="pl-8 text-xs text-navy/45">
+              {t("appPages.linkDetail.deleteBlocked")}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Settings & extras — functionality preserved */}
+      <div className="clay-surface mb-4 p-4 sm:p-5">
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-navy/45">
+          {t("appPages.linkDetail.settings")}
+        </p>
+
+        <div className="space-y-4">
+          <Field label={t("appPages.linkDetail.type")} htmlFor="type">
+            <Select
+              id="type"
+              name="link-type"
+              autoComplete="off"
+              value={link.type}
+              onChange={(e) =>
+                run(
+                  () =>
+                    linksService.updateLink(link.id, {
+                      type: e.target.value as LinkType,
+                    }),
+                  t("appPages.linkDetail.typeUpdated"),
+                )
+              }
+            >
+              <option value="product">{t("appPages.linkDetail.typeProduct")}</option>
+              <option value="shop">{t("appPages.linkDetail.typeShop")}</option>
+              <option value="other">{t("appPages.linkDetail.typeOther")}</option>
+            </Select>
+          </Field>
+
+          <div className="flex flex-wrap gap-2">
+            <CopyButton value={link.shortUrl} label={t("appPages.linkDetail.copyLink")} />
+            <a
+              href={`/l/${link.shortCode}`}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonClasses({ variant: "secondary", size: "sm" })}
+            >
+              <ExternalLinkIcon className="h-4 w-4" />
+              {t("appPages.linkDetail.preview")}
+            </a>
+          </div>
+
+          {link.status === "active" ? (
+            <Button
+              variant="secondary"
+              fullWidth
+              disabled={busy}
+              onClick={() =>
+                run(
+                  () => linksService.setStatus(link.id, "inactive"),
+                  t("appPages.linkDetail.deactivated"),
+                )
+              }
+            >
+              {t("appPages.linkDetail.deactivate")}
+            </Button>
+          ) : link.status === "inactive" ? (
+            <Button
+              fullWidth
+              disabled={busy}
+              onClick={() =>
+                run(
+                  () => linksService.setStatus(link.id, "active"),
+                  t("appPages.linkDetail.activated"),
+                )
+              }
+            >
+              {t("appPages.linkDetail.activate")}
+            </Button>
+          ) : null}
+
+          <div className="border-t border-dotted border-navy/12 pt-3 text-xs text-navy/45">
+            <p>{t("appPages.linkDetail.created", { date: formatDate(link.createdAt) })}</p>
+            <p>{t("appPages.linkDetail.updated", { date: formatDate(link.updatedAt) })}</p>
+          </div>
+
+          <div>
+            <p className="mb-1 text-xs font-semibold text-navy/45">
+              {t("appPages.linkDetail.destination")}
+            </p>
+            <a
+              href={link.destinationUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="break-all text-sm text-orange hover:underline focus-ring rounded-[8px]"
+            >
+              {link.destinationUrl}
+            </a>
+          </div>
+
+          <div>
+            <p className="mb-1 text-xs font-semibold text-navy/45">
+              {t("appPages.linkDetail.resolverUrl")}
+            </p>
+            <CopyField value={link.resolverUrl} label={t("appPages.linkDetail.copy")} />
+          </div>
         </div>
       </div>
 
@@ -458,7 +606,7 @@ export default function LinkDetailPage() {
   );
 }
 
-function Stat({
+function DetailStat({
   label,
   value,
   accent,
@@ -468,13 +616,15 @@ function Stat({
   accent?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-navy/60">{label}</span>
-      <span
-        className={`text-lg font-extrabold ${accent ? "text-[#0c7a45]" : "text-navy"}`}
+    <div>
+      <p
+        className={`text-lg font-extrabold tracking-tight ${
+          accent ? "text-[#0c7a45]" : "text-navy"
+        }`}
       >
         {value}
-      </span>
+      </p>
+      <p className="mt-0.5 text-[11px] text-navy/45">{label}</p>
     </div>
   );
 }

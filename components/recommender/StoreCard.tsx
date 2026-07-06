@@ -4,63 +4,82 @@ import Link from "next/link";
 import Thumb from "@/components/ui/Thumb";
 import Badge from "@/components/ui/Badge";
 import { useT } from "@/context/I18nProvider";
+import { cn } from "@/lib/utils";
 import type { StoreSummary } from "@/lib/types";
 import { formatPercent } from "@/lib/format";
 
 export default function StoreCard({
   store,
   onSelect,
+  variant = "default",
 }: {
   store: StoreSummary;
   onSelect?: () => void;
+  /** `compact` = logo-focused tile for the home-dashboard rail. */
+  variant?: "default" | "compact";
 }) {
   const t = useT();
-  const inner = (
-    <>
-      <div className="flex items-center gap-3">
+
+  const inner =
+    variant === "compact" ? (
+      <div className="flex h-full flex-col items-center justify-center gap-2 py-2">
         <Thumb
           src={store.logoUrl}
           alt={store.name}
-          className="h-12 w-12 shrink-0 rounded-input"
+          className="h-14 w-14 shrink-0 rounded-[14px] bg-white/90 p-1.5"
         />
-        <div className="min-w-0">
-          <p className="truncate font-bold text-navy">{store.name}</p>
-          <p className="truncate text-xs text-navy/55">
-            {store.category ?? store.primaryDomain}
-          </p>
+        <p className="line-clamp-2 text-center text-xs font-bold text-navy">
+          {store.name}
+        </p>
+      </div>
+    ) : (
+      <>
+        <div className="flex items-center gap-3">
+          <Thumb
+            src={store.logoUrl}
+            alt={store.name}
+            className="h-12 w-12 shrink-0 rounded-input"
+          />
+          <div className="min-w-0">
+            <p className="truncate font-bold text-navy">{store.name}</p>
+            <p className="truncate text-xs text-navy/55">
+              {store.category ?? store.primaryDomain}
+            </p>
+          </div>
         </div>
-      </div>
-      {/* mt-auto pins the badge row to the card bottom when cards in a rail/grid
-          are stretched to equal heights. */}
-      <div className="mt-auto flex flex-wrap gap-2 pt-3">
-        <Badge tone="info">
-          {t(
-            store.activeCampaignCount === 1
-              ? "stores.activeCampaignOne"
-              : "stores.activeCampaignOther",
-            { count: store.activeCampaignCount },
+        <div className="mt-auto flex flex-wrap gap-2 pt-3">
+          <Badge tone="info">
+            {t(
+              store.activeCampaignCount === 1
+                ? "stores.activeCampaignOne"
+                : "stores.activeCampaignOther",
+              { count: store.activeCampaignCount },
+            )}
+          </Badge>
+          {store.bestDiscountPercent != null && (
+            <Badge tone="success">
+              {t("stores.upToDiscount", {
+                percent: formatPercent(store.bestDiscountPercent),
+              })}
+            </Badge>
           )}
-        </Badge>
-        {store.bestDiscountPercent != null && (
-          <Badge tone="success">
-            {t("stores.upToDiscount", {
-              percent: formatPercent(store.bestDiscountPercent),
-            })}
-          </Badge>
-        )}
-        {store.bestCommissionPercent != null && (
-          <Badge tone="orange">
-            {t("stores.commission", {
-              percent: formatPercent(store.bestCommissionPercent),
-            })}
-          </Badge>
-        )}
-      </div>
-    </>
-  );
+          {store.bestCommissionPercent != null && (
+            <Badge tone="orange">
+              {t("stores.commission", {
+                percent: formatPercent(store.bestCommissionPercent),
+              })}
+            </Badge>
+          )}
+        </div>
+      </>
+    );
 
-  const className =
-    "flex h-full w-full flex-col rounded-card border border-navy/10 bg-surface p-4 text-left shadow-card transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-orange/30 hover:shadow-float focus-ring";
+  const className = cn(
+    "flex h-full w-full flex-col text-left transition-[transform,box-shadow] focus-ring active:scale-[0.98]",
+    variant === "compact"
+      ? "clay-surface-sm min-h-[120px] p-3 hover:-translate-y-0.5"
+      : "rounded-card border border-navy/10 bg-surface p-4 shadow-card hover:-translate-y-0.5 hover:border-orange/30 hover:shadow-float",
+  );
 
   if (onSelect) {
     return (

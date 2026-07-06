@@ -59,6 +59,23 @@
   --shadow-rail: 0 18px 42px rgba(0, 46, 81, 0.12);
   --shadow-pop: 0 16px 48px rgba(0, 46, 81, 0.18);
 
+  /* Claymorphism — soft inflated surfaces for mobile-first pages */
+  --radius-clay: 28px;
+  --radius-clay-sm: 20px;
+  --radius-clay-lg: 32px;
+  --shadow-clay:
+    10px 10px 24px rgba(0, 46, 81, 0.07),
+    -6px -6px 18px rgba(255, 255, 255, 0.95),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.75),
+    inset -3px -4px 8px rgba(0, 46, 81, 0.04);
+  --shadow-clay-navy:
+    0 16px 40px rgba(0, 46, 81, 0.28),
+    inset 3px 3px 10px rgba(255, 255, 255, 0.1),
+    inset -4px -6px 14px rgba(0, 0, 0, 0.18);
+  --shadow-clay-pressed:
+    inset 4px 4px 10px rgba(0, 46, 81, 0.08),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.6);
+
   /*
    * Motion — short, soft entrances shared by overlays, menus and page loads.
    * Each token becomes an `animate-*` utility (so responsive variants work,
@@ -135,6 +152,97 @@ body {
     ),
     radial-gradient(circle at 0% 100%, rgba(250, 80, 4, 0.15), transparent 43%),
     linear-gradient(160deg, #ece7e4 0%, #f8f5f3 50%, #ffffff 100%);
+}
+
+/* ── Claymorphism surface utilities ─────────────────────────────────────── */
+
+.clay-surface {
+  background: linear-gradient(145deg, #ffffff 0%, #f3efec 100%);
+  border-radius: var(--radius-clay);
+  box-shadow: var(--shadow-clay);
+}
+
+.clay-surface-sm {
+  background: linear-gradient(145deg, #ffffff 0%, #f5f2ef 100%);
+  border-radius: var(--radius-clay-sm);
+  box-shadow: var(--shadow-clay);
+}
+
+.clay-card-navy {
+  background: linear-gradient(155deg, #003d6b 0%, #002e51 55%, #002848 100%);
+  border-radius: var(--radius-clay-lg);
+  box-shadow: var(--shadow-clay-navy);
+  color: #ffffff;
+}
+
+.clay-inset {
+  background: linear-gradient(145deg, #f8f5f3 0%, #ece8e5 100%);
+  border-radius: var(--radius-clay-sm);
+  box-shadow: var(--shadow-clay-pressed);
+}
+
+.clay-btn-orange {
+  background: linear-gradient(145deg, #ff6a2a 0%, #fa5004 100%);
+  border-radius: 14px;
+  box-shadow:
+    0 4px 14px rgba(250, 80, 4, 0.35),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.25),
+    inset -2px -3px 6px rgba(0, 0, 0, 0.12);
+  color: #ffffff;
+  font-weight: 700;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.clay-btn-orange:active {
+  transform: scale(0.97);
+  box-shadow:
+    0 2px 8px rgba(250, 80, 4, 0.25),
+    inset 3px 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.clay-icon-btn {
+  background: linear-gradient(145deg, #ffffff 0%, #f0ece9 100%);
+  border-radius: 50%;
+  box-shadow:
+    4px 4px 10px rgba(0, 46, 81, 0.08),
+    -2px -2px 8px rgba(255, 255, 255, 0.9),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.7);
+  transition: transform 150ms ease;
+}
+
+.clay-icon-btn:active {
+  transform: scale(0.94);
+  box-shadow: var(--shadow-clay-pressed);
+}
+
+.clay-divider-dotted {
+  border: none;
+  border-top: 2px dotted rgba(0, 46, 81, 0.12);
+}
+
+.clay-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* Home links rail: uniform width — one full card + half peek (gap-3 = 0.75rem).
+   flex: 0 0 locks size so long titles can't blow out individual cards. */
+.link-rail-item {
+  flex: 0 0 calc((100vw - 2rem - 0.75rem) / 1.45);
+  width: calc((100vw - 2rem - 0.75rem) / 1.45);
+  min-width: calc((100vw - 2rem - 0.75rem) / 1.45);
+  max-width: calc((100vw - 2rem - 0.75rem) / 1.45);
+}
+
+@media (min-width: 640px) {
+  .link-rail-item {
+    flex: 0 0 calc((100% - 0.75rem) / 1.5);
+    width: calc((100% - 0.75rem) / 1.5);
+    min-width: calc((100% - 0.75rem) / 1.5);
+    max-width: min(calc((100% - 0.75rem) / 1.5), 300px);
+  }
 }
 
 /* Shared focus ring for interactive elements */
