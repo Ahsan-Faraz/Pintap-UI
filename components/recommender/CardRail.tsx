@@ -15,7 +15,7 @@ export default function CardRail({
   return (
     <div
       className={cn(
-        "-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2",
+        "-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 scroll-pl-1",
         "[scrollbar-width:thin] [-webkit-overflow-scrolling:touch]",
         className,
       )}

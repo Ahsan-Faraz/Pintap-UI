@@ -14,12 +14,15 @@ export default function CopyField({
   label,
   className,
   variant = "navy",
+  iconOnly = false,
 }: {
   value: string;
   label?: string;
   className?: string;
   /** `orange` matches the mobile link-detail mock; `navy` is the default. */
   variant?: "navy" | "orange";
+  /** Icon-only copy control (link-detail orange button). */
+  iconOnly?: boolean;
 }) {
   const t = useT();
   const [copied, setCopied] = useState(false);
@@ -37,10 +40,7 @@ export default function CopyField({
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 rounded-[16px] bg-white/80 p-1.5 pl-3 focus-within:ring-2 focus-within:ring-orange/20",
-        variant === "orange"
-          ? "clay-inset border-0"
-          : "rounded-input border border-navy/15 bg-surface focus-within:border-orange",
+        "flex items-center gap-1.5 rounded-input border border-navy/15 bg-surface p-1.5 pl-3 focus-within:border-orange focus-within:ring-2 focus-within:ring-orange/20",
         className,
       )}
     >
@@ -56,11 +56,16 @@ export default function CopyField({
       <button
         type="button"
         onClick={copy}
+        aria-label={copied ? t("common.copied") : (label ?? t("common.copyLink"))}
         className={cn(
-          "inline-flex shrink-0 items-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors focus-ring",
-          variant === "orange"
-            ? "clay-btn-orange rounded-[12px] px-4"
-            : "rounded-[10px] bg-navy text-white hover:bg-navy/90",
+          "inline-flex shrink-0 items-center justify-center transition-colors focus-ring",
+          iconOnly
+            ? "h-10 w-10 rounded-input bg-orange text-white hover:bg-orange/90"
+            : "gap-1.5 px-3 py-2 text-sm font-semibold",
+          !iconOnly &&
+            (variant === "orange"
+              ? "rounded-input bg-orange text-white hover:bg-orange/90"
+              : "rounded-[10px] bg-navy text-white hover:bg-navy/90"),
         )}
       >
         {copied ? (
@@ -68,7 +73,8 @@ export default function CopyField({
         ) : (
           <CopyIcon className="h-4 w-4" />
         )}
-        {copied ? t("common.copied") : (label ?? t("common.copyLink"))}
+        {!iconOnly &&
+          (copied ? t("common.copied") : (label ?? t("common.copyLink")))}
       </button>
     </div>
   );

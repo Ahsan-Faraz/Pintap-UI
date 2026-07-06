@@ -79,7 +79,7 @@ export default function StoreCard({
   const className = cn(
     "flex h-full w-full flex-col text-left transition-[transform,box-shadow] focus-ring active:scale-[0.98]",
     variant === "compact"
-      ? "clay-surface-sm min-h-[128px] p-3 hover:-translate-y-0.5 sm:min-h-[136px] sm:p-4"
+      ? "app-flat-card min-h-[128px] p-3 sm:min-h-[136px] sm:p-4"
       : "rounded-card border border-navy/10 bg-surface p-4 shadow-card hover:-translate-y-0.5 hover:border-orange/30 hover:shadow-float",
   );
 

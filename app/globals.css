@@ -227,30 +227,61 @@ body {
   gap: 0.75rem;
 }
 
+/* Flat app surfaces (home + link detail — no claymorphism) */
+.app-flat-card {
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(0, 46, 81, 0.1);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.dashboard-hero-card {
+  border-radius: 24px;
+  background: #002e51;
+  color: #ffffff;
+}
+
+.hero-petal-tint {
+  filter: brightness(0) saturate(100%) invert(72%) sepia(45%) saturate(800%)
+    hue-rotate(169deg) brightness(105%) contrast(95%);
+}
+
+.app-icon-btn {
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 46, 81, 0.12);
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0, 46, 81, 0.06);
+}
+
+.app-divider-dotted {
+  border: none;
+  border-top: 2px dotted rgba(0, 46, 81, 0.12);
+}
+
 /* Home links rail: uniform width — one full card + half peek (gap-3 = 0.75rem).
    flex: 0 0 locks size so long titles can't blow out individual cards. */
 .link-rail-item {
-  flex: 0 0 calc((100vw - 2rem - 0.75rem) / 1.45);
-  width: calc((100vw - 2rem - 0.75rem) / 1.45);
-  min-width: calc((100vw - 2rem - 0.75rem) / 1.45);
-  max-width: calc((100vw - 2rem - 0.75rem) / 1.45);
+  flex: 0 0 calc((100vw - 2rem - 0.75rem) / 1.26);
+  width: calc((100vw - 2rem - 0.75rem) / 1.26);
+  min-width: calc((100vw - 2rem - 0.75rem) / 1.26);
+  max-width: calc((100vw - 2rem - 0.75rem) / 1.26);
 }
 
 @media (min-width: 640px) {
   .link-rail-item {
-    flex: 0 0 260px;
-    width: 260px;
-    min-width: 260px;
-    max-width: 260px;
+    flex: 0 0 315px;
+    width: 315px;
+    min-width: 315px;
+    max-width: 315px;
   }
 }
 
 @media (min-width: 1024px) {
   .link-rail-item {
-    flex: 0 0 280px;
-    width: 280px;
-    min-width: 280px;
-    max-width: 280px;
+    flex: 0 0 335px;
+    width: 335px;
+    min-width: 335px;
+    max-width: 335px;
   }
 }
 

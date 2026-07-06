@@ -24,7 +24,7 @@ export default function LinkCard({
   const className = cn(
     "flex h-full w-full min-w-0 flex-col text-left transition-[transform,box-shadow] focus-ring active:scale-[0.98]",
     variant === "rail"
-      ? "clay-surface-sm min-h-[248px] overflow-hidden p-4 hover:-translate-y-0.5"
+      ? "app-flat-card min-h-[248px] overflow-hidden p-4 transition-shadow hover:shadow-float"
       : "rounded-card border border-navy/10 bg-surface p-3 shadow-card hover:-translate-y-0.5 hover:border-orange/30 hover:shadow-float",
   );
 

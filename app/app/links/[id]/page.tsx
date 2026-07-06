@@ -160,7 +160,7 @@ export default function LinkDetailPage() {
         <Link
           href="/app/links"
           aria-label={t("appPages.linkDetail.backToLinks")}
-          className="clay-icon-btn grid h-10 w-10 shrink-0 place-items-center text-navy focus-ring"
+          className="app-icon-btn grid h-10 w-10 shrink-0 place-items-center text-navy focus-ring"
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </Link>
@@ -171,14 +171,14 @@ export default function LinkDetailPage() {
           type="button"
           aria-label={t("linkPreview.share")}
           onClick={() => shareLink(link.shortUrl)}
-          className="clay-icon-btn grid h-10 w-10 shrink-0 place-items-center text-navy focus-ring"
+          className="app-icon-btn grid h-10 w-10 shrink-0 place-items-center text-navy focus-ring"
         >
           <ShareIcon className="h-5 w-5" />
         </button>
       </header>
 
       {/* Product overview + stats */}
-      <div className="clay-surface mb-4 p-4 sm:p-5">
+      <div className="app-flat-card mb-4 p-4 sm:p-5">
         <div className="flex gap-3.5">
           <Thumb
             src={link.imageUrl}
@@ -210,7 +210,7 @@ export default function LinkDetailPage() {
           </div>
         </div>
 
-        <hr className="clay-divider-dotted my-4" />
+        <hr className="app-divider-dotted my-4" />
 
         <div className="grid grid-cols-3 gap-2 text-center">
           <DetailStat label={t("links.clicks")} value={formatNumber(link.metrics.clicks)} />
@@ -227,7 +227,7 @@ export default function LinkDetailPage() {
       </div>
 
       {/* Your link */}
-      <div className="clay-surface mb-4 p-4 sm:p-5">
+      <div className="app-flat-card mb-4 p-4 sm:p-5">
         <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-navy/45">
           {t("appPages.linkDetail.yourLink")}
         </p>
@@ -235,6 +235,7 @@ export default function LinkDetailPage() {
           value={link.shortUrl}
           label={t("appPages.linkDetail.copy")}
           variant="orange"
+          iconOnly
         />
 
         {link.discountCode && (
@@ -242,7 +243,11 @@ export default function LinkDetailPage() {
             <span className="flex-1 font-bold tracking-wide text-navy">
               {link.discountCode}
             </span>
-            <CopyButton value={link.discountCode} variant="icon" />
+            <CopyButton
+              value={link.discountCode}
+              variant="icon"
+              className="h-8 w-8 shrink-0 border-0 bg-transparent text-[#0c7a45] shadow-none hover:bg-green/15"
+            />
           </div>
         )}
 
@@ -252,7 +257,7 @@ export default function LinkDetailPage() {
       </div>
 
       {/* Campaign */}
-      <div className="clay-surface mb-4 p-4 sm:p-5">
+      <div className="app-flat-card mb-4 p-4 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-2">
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-navy/45">
             {t("appPages.linkDetail.campaign")}
@@ -308,7 +313,7 @@ export default function LinkDetailPage() {
                 {switchOptions.map((c) => (
                   <div
                     key={c.id}
-                    className="clay-inset flex items-center justify-between gap-3 p-3"
+                    className="flex items-center justify-between gap-3 rounded-input border border-navy/10 bg-background p-3"
                   >
                     <div className="min-w-0">
                       <p className="font-semibold text-navy">{c.name}</p>
@@ -346,7 +351,7 @@ export default function LinkDetailPage() {
                 {switchOptions.map((c) => (
                   <div
                     key={c.id}
-                    className="clay-inset flex items-center justify-between gap-3 p-3"
+                    className="flex items-center justify-between gap-3 rounded-input border border-navy/10 bg-background p-3"
                   >
                     <div className="min-w-0">
                       <p className="font-semibold text-navy">{c.name}</p>
@@ -382,7 +387,7 @@ export default function LinkDetailPage() {
       </div>
 
       {/* Action menu */}
-      <div className="clay-surface mb-4 overflow-hidden">
+      <div className="app-flat-card mb-4 overflow-hidden">
         <button
           type="button"
           onClick={() => setRenameOpen((v) => !v)}
@@ -429,7 +434,7 @@ export default function LinkDetailPage() {
           </div>
         )}
 
-        <hr className="clay-divider-dotted mx-4" />
+        <hr className="app-divider-dotted mx-4" />
 
         <button
           type="button"
@@ -457,7 +462,7 @@ export default function LinkDetailPage() {
       </div>
 
       {/* Settings & extras — functionality preserved */}
-      <div className="clay-surface mb-4 p-4 sm:p-5">
+      <div className="app-flat-card mb-4 p-4 sm:p-5">
         <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-navy/45">
           {t("appPages.linkDetail.settings")}
         </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircleIcon, CopyIcon } from "./icons";
 import { useT } from "@/context/I18nProvider";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +42,11 @@ export default function CopyButton({
           className,
         )}
       >
-        {copied ? <CheckIcon /> : <CopyIcon />}
+        {copied ? (
+          <CheckCircleIcon className="h-4 w-4 text-green-600" />
+        ) : (
+          <CopyIcon className="h-4 w-4" />
+        )}
       </button>
     );
   }
@@ -55,25 +60,12 @@ export default function CopyButton({
         className,
       )}
     >
-      {copied ? <CheckIcon /> : <CopyIcon />}
+      {copied ? (
+        <CheckCircleIcon className="h-4 w-4 text-green-600" />
+      ) : (
+        <CopyIcon className="h-4 w-4" />
+      )}
       {copied ? copiedLabel : idleLabel}
     </button>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="9" y="9" width="11" height="11" rx="2" />
-      <path d="M5 15V5a2 2 0 012-2h10" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

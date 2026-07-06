@@ -25,7 +25,7 @@ export default function QuickCreate() {
   return (
     <form
       onSubmit={go}
-      className="clay-surface p-4 sm:p-5"
+      className="app-flat-card p-4 sm:p-5"
     >
       <p className="text-sm font-bold text-navy">
         {t("dashboard.user.createLinkTitle")}

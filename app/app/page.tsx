@@ -11,6 +11,7 @@ import StoreCard from "@/components/recommender/StoreCard";
 import CardRail from "@/components/recommender/CardRail";
 import LinkPreviewModal from "@/components/recommender/LinkPreviewModal";
 import ShopDetailsSheet from "@/components/recommender/ShopDetailsSheet";
+import DashboardHeroPattern from "@/components/recommender/DashboardHeroPattern";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import { useAppContext } from "@/context/AppProvider";
 import { useAsync } from "@/lib/hooks";
@@ -20,7 +21,7 @@ import { formatCurrencyMinor, formatNumber } from "@/lib/format";
 import { useT } from "@/context/I18nProvider";
 import { ensureFahrradXxlOnHomeShops } from "@/lib/store-branding";
 
-function ClaySectionHeader({
+function SectionHeader({
   title,
   href,
 }: {
@@ -30,7 +31,7 @@ function ClaySectionHeader({
   return (
     <Link
       href={href}
-      className="clay-section-header mb-3 group focus-ring rounded-[12px]"
+      className="mb-3 flex items-center justify-between gap-3 group focus-ring rounded-input"
     >
       <h2 className="text-lg font-extrabold text-navy">{title}</h2>
       <span className="grid h-8 w-8 place-items-center rounded-full bg-navy/6 text-navy/35 transition group-hover:bg-navy/10 group-hover:text-navy/55">
@@ -71,36 +72,18 @@ export default function RecommenderHomePage() {
 
   return (
     <div className="mx-auto max-w-lg sm:max-w-5xl">
-      {/* Hero dashboard card — navy clay with inline KPIs */}
-      <div className="clay-card-navy relative overflow-hidden p-5 sm:p-6">
-        {/* Brand watermark */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-6 -top-4 h-40 w-40 opacity-[0.12] sm:h-48 sm:w-48"
-          style={{
-            backgroundImage: "url(/pintap-icon.svg)",
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-          }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-8 right-8 h-32 w-32 opacity-[0.08] sm:h-40 sm:w-40"
-          style={{
-            backgroundImage: "url(/pintap-icon.svg)",
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-          }}
-        />
+      {/* Hero dashboard card */}
+      <div className="dashboard-hero-card relative overflow-hidden p-5 sm:p-6">
+        <DashboardHeroPattern />
 
-        <p className="relative max-w-[85%] text-lg font-bold leading-snug text-white sm:text-xl">
-          {greeting}{" "}
-          <span className="font-semibold text-white/90">
+        <div className="relative max-w-[72%] space-y-1 sm:max-w-[65%]">
+          <p className="text-lg font-normal leading-snug text-white sm:text-[22px]">
+            {greeting}
+          </p>
+          <p className="text-base font-normal leading-snug text-white/90 sm:text-lg">
             {t("dashboard.user.subtitle")}
-          </span>
-        </p>
+          </p>
+        </div>
 
         <div className="relative mt-6 grid grid-cols-3 gap-2 sm:gap-4">
           <HeroStat
@@ -133,21 +116,21 @@ export default function RecommenderHomePage() {
 
       {/* My Links — horizontal rail */}
       <div className="mt-6">
-        <ClaySectionHeader
+        <SectionHeader
           title={t("dashboard.user.myActiveLinks")}
           href="/app/links"
         />
         {loading ? (
-          <CardRail className="-mx-4 px-4 sm:mx-0 sm:px-1">
+          <CardRail>
             {[0, 1, 2].map((i) => (
               <Skeleton
                 key={i}
-                className="link-rail-item h-[248px] shrink-0 snap-start self-stretch rounded-[20px]"
+                className="link-rail-item h-[248px] shrink-0 snap-start self-stretch rounded-card"
               />
             ))}
           </CardRail>
         ) : links.length === 0 ? (
-          <div className="clay-surface p-4">
+          <div className="app-flat-card p-4">
             <EmptyState
               title={t("dashboard.user.noLinksTitle")}
               description={t("dashboard.user.noLinksDesc")}
@@ -159,7 +142,7 @@ export default function RecommenderHomePage() {
             />
           </div>
         ) : (
-          <CardRail className="-mx-4 px-4 sm:mx-0 sm:px-1">
+          <CardRail>
             {links.map((l) => (
               <div key={l.id} className="link-rail-item shrink-0 snap-start self-stretch">
                 <LinkCard link={l} onSelect={setSelectedLink} variant="rail" />
@@ -171,7 +154,7 @@ export default function RecommenderHomePage() {
 
       {/* My Shops — compact logo rail */}
       <div className="mt-6">
-        <ClaySectionHeader
+        <SectionHeader
           title={t("dashboard.user.myShops")}
           href="/app/discover"
         />
@@ -192,7 +175,7 @@ export default function RecommenderHomePage() {
             </div>
           </>
         ) : shops.length === 0 ? (
-          <div className="clay-surface p-4">
+          <div className="app-flat-card p-4">
             <EmptyState
               title={t("dashboard.user.noShopsTitle")}
               description={t("dashboard.user.noShopsDesc")}
@@ -259,14 +242,14 @@ function HeroStat({
         <Skeleton className="mx-auto h-7 w-16 bg-white/20" />
       ) : (
         <p
-          className={`text-xl font-extrabold tracking-tight sm:text-2xl ${
+          className={`text-xl font-normal tracking-tight sm:text-2xl ${
             accent ? "text-green" : "text-white"
           }`}
         >
           {value}
         </p>
       )}
-      <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/65 sm:text-xs">
+      <p className="mt-0.5 text-[11px] font-semibold text-white/70 sm:text-xs">
         {label}
       </p>
     </div>

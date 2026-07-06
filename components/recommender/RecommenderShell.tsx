@@ -201,7 +201,7 @@ export default function RecommenderShell({
                   key={it.href}
                   href={it.href}
                   aria-label={t("nav.create")}
-                  className="clay-btn-orange grid h-12 w-12 -translate-y-3 touch-manipulation place-items-center rounded-full transition-transform duration-150 active:scale-90 focus-ring"
+                  className="grid h-12 w-12 -translate-y-3 touch-manipulation place-items-center rounded-full bg-orange text-white shadow-pop transition-transform duration-150 active:scale-90 focus-ring"
                 >
                   <PlusIcon />
                 </Link>
