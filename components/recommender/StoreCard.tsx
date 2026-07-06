@@ -7,6 +7,7 @@ import { useT } from "@/context/I18nProvider";
 import { cn } from "@/lib/utils";
 import type { StoreSummary } from "@/lib/types";
 import { formatPercent } from "@/lib/format";
+import { brandedStoreLogo } from "@/lib/store-branding";
 
 export default function StoreCard({
   store,
@@ -19,14 +20,15 @@ export default function StoreCard({
   variant?: "default" | "compact";
 }) {
   const t = useT();
+  const logoSrc = brandedStoreLogo(store);
 
   const inner =
     variant === "compact" ? (
       <div className="flex h-full flex-col items-center justify-center gap-2 py-2">
         <Thumb
-          src={store.logoUrl}
+          src={logoSrc}
           alt={store.name}
-          className="h-14 w-14 shrink-0 rounded-[14px] bg-white/90 p-1.5"
+          className="h-[4.25rem] w-[4.25rem] shrink-0 rounded-[14px] bg-white/90 p-1"
         />
         <p className="line-clamp-2 text-center text-xs font-bold text-navy">
           {store.name}
@@ -36,7 +38,7 @@ export default function StoreCard({
       <>
         <div className="flex items-center gap-3">
           <Thumb
-            src={store.logoUrl}
+            src={logoSrc}
             alt={store.name}
             className="h-12 w-12 shrink-0 rounded-input"
           />
@@ -77,7 +79,7 @@ export default function StoreCard({
   const className = cn(
     "flex h-full w-full flex-col text-left transition-[transform,box-shadow] focus-ring active:scale-[0.98]",
     variant === "compact"
-      ? "clay-surface-sm min-h-[120px] p-3 hover:-translate-y-0.5"
+      ? "clay-surface-sm min-h-[128px] p-3 hover:-translate-y-0.5"
       : "rounded-card border border-navy/10 bg-surface p-4 shadow-card hover:-translate-y-0.5 hover:border-orange/30 hover:shadow-float",
   );
 

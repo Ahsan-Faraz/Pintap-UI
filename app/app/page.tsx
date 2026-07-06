@@ -18,6 +18,7 @@ import { analyticsService, linksService, storesService } from "@/services";
 import type { LinkSummary, StoreSummary } from "@/lib/types";
 import { formatCurrencyMinor, formatNumber } from "@/lib/format";
 import { useT } from "@/context/I18nProvider";
+import { ensureFahrradXxlOnHomeShops } from "@/lib/store-branding";
 
 function ClaySectionHeader({
   title,
@@ -47,12 +48,17 @@ export default function RecommenderHomePage() {
   const [selectedShop, setSelectedShop] = useState<StoreSummary | null>(null);
 
   const { data, loading } = useAsync(async () => {
-    const [kpis, links, myShops] = await Promise.all([
+    const [kpis, links, myShops, connectedShops] = await Promise.all([
       userId ? analyticsService.getRecommenderKpis(userId) : null,
       linksService.listMyLinks({ status: "active", sort: "newest" }),
       userId ? storesService.getMyShops(userId) : [],
+      storesService.listConnectedStores(),
     ]);
-    return { kpis, links, shops: myShops };
+    return {
+      kpis,
+      links,
+      shops: ensureFahrradXxlOnHomeShops(myShops, connectedShops),
+    };
   }, [userId]);
 
   const kpis = data?.kpis;
@@ -174,7 +180,7 @@ export default function RecommenderHomePage() {
             {[0, 1, 2].map((i) => (
               <Skeleton
                 key={i}
-                className="h-[120px] w-[108px] shrink-0 snap-start rounded-[20px]"
+                className="h-[128px] w-[108px] shrink-0 snap-start rounded-[20px]"
               />
             ))}
           </CardRail>

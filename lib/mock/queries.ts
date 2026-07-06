@@ -17,6 +17,7 @@ import type {
   Store,
   StoreSummary,
 } from "@/lib/types";
+import { brandedStoreLogo } from "@/lib/store-branding";
 
 export function linkMetrics(db: MockDb, linkId: string): LinkMetrics {
   const store = db.links.find((l) => l.id === linkId)?.storeId;
@@ -39,7 +40,7 @@ export function toLinkSummary(db: MockDb, link: Link): LinkSummary {
   return {
     ...link,
     store: store
-      ? { id: store.id, name: store.name, logoUrl: store.logoUrl }
+      ? { id: store.id, name: store.name, logoUrl: brandedStoreLogo(store) }
       : null,
     campaign: campaign
       ? {
@@ -104,7 +105,7 @@ export function toCampaignSummary(db: MockDb, campaign: Campaign): CampaignSumma
   return {
     ...campaign,
     store: store
-      ? { id: store.id, name: store.name, logoUrl: store.logoUrl }
+      ? { id: store.id, name: store.name, logoUrl: brandedStoreLogo(store) }
       : null,
     ...codeCounts(db, campaign.id),
     fundingState: fundingStateForStore(db, campaign.storeId),
@@ -131,6 +132,7 @@ export function toStoreSummary(db: MockDb, store: Store): StoreSummary {
   );
   return {
     ...store,
+    logoUrl: brandedStoreLogo(store),
     activeCampaignCount: active.length,
     bestDiscountPercent: bestDiscount,
     bestCommissionPercent: bestCommission,

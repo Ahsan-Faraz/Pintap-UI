@@ -20,6 +20,7 @@ import type {
 } from "@/lib/types";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { faviconUrl } from "@/lib/url-utils";
+import { brandedStoreLogo } from "@/lib/store-branding";
 import type { Tables } from "./database.types";
 
 type StoreRow = Tables<"stores">;
@@ -45,7 +46,7 @@ function mapSocialProfiles(value: unknown): SocialProfile[] {
 }
 
 export function mapStore(row: StoreRow): Store {
-  return {
+  const store: Store = {
     id: row.id,
     name: row.name,
     slug: row.slug,
@@ -63,6 +64,7 @@ export function mapStore(row: StoreRow): Store {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+  return { ...store, logoUrl: brandedStoreLogo(store) };
 }
 
 export function mapCampaign(row: CampaignRow): Campaign {

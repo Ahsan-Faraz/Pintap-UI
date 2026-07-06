@@ -10,6 +10,7 @@ import { useAsync } from "@/lib/hooks";
 import { campaignsService } from "@/services";
 import type { CampaignSummary, StoreSummary } from "@/lib/types";
 import { formatDate, formatPercent } from "@/lib/format";
+import { brandedStoreLogo } from "@/lib/store-branding";
 
 /**
  * Shop detail bottom sheet, opened from a shop card (homepage rail + Shops
@@ -57,7 +58,7 @@ export default function ShopDetailsSheet({
       title={
         <span className="flex min-w-0 items-center gap-3">
           <Thumb
-            src={store.logoUrl}
+            src={brandedStoreLogo(store)}
             alt={store.name}
             className="h-11 w-11 shrink-0 rounded-input"
           />
