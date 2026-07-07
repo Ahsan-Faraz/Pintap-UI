@@ -30,7 +30,7 @@ export default function StoreCard({
           alt={store.name}
           className="h-[4.25rem] w-[4.25rem] shrink-0 rounded-[14px] bg-white/90 p-1 sm:h-[4.75rem] sm:w-[4.75rem] lg:h-20 lg:w-20"
         />
-        <p className="line-clamp-2 text-center text-xs font-bold text-navy sm:text-sm">
+        <p className="line-clamp-2 text-center text-xs text-navy/55">
           {store.name}
         </p>
       </div>

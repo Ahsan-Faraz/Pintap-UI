@@ -55,22 +55,32 @@ export default function MerchantShell({
     {
       labelKey: "group.manage",
       items: [
-        { href: "/merchant/store", labelKey: "nav.store", icon: <StoreIcon /> },
         { href: "/merchant/campaigns", labelKey: "nav.campaigns", icon: <TagIcon /> },
         { href: "/merchant/orders", labelKey: "nav.orders", icon: <ReceiptIcon /> },
+        { href: "/merchant/billing", labelKey: "nav.billing", icon: <EuroIcon /> },
       ],
     },
     {
       labelKey: "group.account",
       items: [
-        { href: "/merchant/billing", labelKey: "nav.billing", icon: <EuroIcon /> },
+        { href: "/merchant/store", labelKey: "nav.store", icon: <StoreIcon /> },
         { href: "/merchant/settings", labelKey: "nav.settings", icon: <SettingsIcon /> },
       ],
     },
   ];
 
   return (
-    <PortalShell sectionKey="section.merchant" groups={groups} profileHref="/app/profile">
+    <PortalShell
+      sectionKey="section.merchant"
+      groups={groups}
+      profileHref="/app/profile"
+      appearance="merchant"
+      merchantStore={
+        store
+          ? { name: store.name, logoUrl: store.logoUrl }
+          : undefined
+      }
+    >
       {children}
     </PortalShell>
   );

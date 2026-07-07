@@ -41,8 +41,8 @@ export default async function RootLayout({
     // --font-sans token references var(--font-inter) at :root, and an
     // undefined var there makes --font-sans compute to invalid everywhere
     // (custom properties inherit their *computed* value).
-    <html lang={locale} className={inter.variable}>
-      <body className="antialiased">
+    <html lang={locale} className={inter.variable} suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
         <a href="#main-content" className="skip-link">
           {t("common.skipToContent")}
         </a>

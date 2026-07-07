@@ -1,6 +1,11 @@
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { db } from "@/lib/mock/store";
-import type { AdminKpis, MerchantKpis, RecommenderKpis } from "@/lib/types";
+import type {
+  AdminKpis,
+  CampaignMetrics,
+  MerchantKpis,
+  RecommenderKpis,
+} from "@/lib/types";
 import { delay } from "@/lib/utils";
 import {
   commissionOwedMinor,
@@ -12,7 +17,34 @@ import { pick } from "./_runtime";
 export interface AnalyticsService {
   getRecommenderKpis(userId: string): Promise<RecommenderKpis>;
   getMerchantKpis(storeId: string): Promise<MerchantKpis>;
+  getCampaignMetricsForStore(storeId: string): Promise<CampaignMetrics[]>;
   getAdminKpis(): Promise<AdminKpis>;
+}
+
+function campaignMetricsFromDb(
+  d: ReturnType<typeof db>,
+  storeId: string,
+): CampaignMetrics[] {
+  return d.campaigns
+    .filter((c) => c.storeId === storeId)
+    .map((c) => {
+      const links = d.links.filter(
+        (l) => l.campaignId === c.id && l.status !== "deleted",
+      );
+      const linkIds = new Set(links.map((l) => l.id));
+      const clicks = d.clicks.filter((cl) => linkIds.has(cl.linkId)).length;
+      const attrs = d.attributions.filter((a) => a.campaignId === c.id);
+      const counted = attrs.filter(
+        (a) => a.status === "confirmed" || a.status === "pending",
+      );
+      return {
+        campaignId: c.id,
+        recommenders: new Set(links.map((l) => l.userId)).size,
+        clicks,
+        orders: counted.length,
+        revenueMinor: counted.reduce((s, a) => s + a.orderAmountMinor, 0),
+      };
+    });
 }
 
 const mock: AnalyticsService = {
@@ -66,6 +98,11 @@ const mock: AnalyticsService = {
       fundedBalanceMinor: fundedBalanceMinor(d, storeId),
       currency,
     };
+  },
+
+  async getCampaignMetricsForStore(storeId) {
+    await delay();
+    return campaignMetricsFromDb(db(), storeId);
   },
 
   async getAdminKpis() {
@@ -206,6 +243,90 @@ const real: AnalyticsService = {
       fundedBalanceMinor,
       currency,
     };
+  },
+
+  async getCampaignMetricsForStore(storeId) {
+    const supabase = createSupabaseBrowserClient();
+    const { data: campaigns } = await supabase
+      .from("campaigns")
+      .select("id")
+      .eq("store_id", storeId);
+    if (!campaigns?.length) return [];
+
+    const campaignIds = campaigns.map((c) => c.id);
+
+    const { data: storeLinks } = await supabase
+      .from("links")
+      .select("id, campaign_id, user_id")
+      .eq("store_id", storeId)
+      .neq("status", "deleted")
+      .in("campaign_id", campaignIds);
+
+    const links = storeLinks ?? [];
+    const linkIds = links.map((l) => l.id);
+
+    const [clicksRes, attrsRes] = await Promise.all([
+      linkIds.length
+        ? supabase.rpc("link_click_counts", { p_link_ids: linkIds })
+        : Promise.resolve({
+            data: [] as { link_id: string; clicks: number }[],
+          }),
+      supabase
+        .from("link_order_attributions")
+        .select("campaign_id, order_amount_minor, status")
+        .in("campaign_id", campaignIds),
+    ]);
+
+    const clicksByLink = new Map(
+      (clicksRes.data ?? []).map((r) => [r.link_id, Number(r.clicks)]),
+    );
+
+    const byCampaign = new Map<
+      string,
+      {
+        recommenders: Set<string>;
+        clicks: number;
+        orders: number;
+        revenueMinor: number;
+      }
+    >();
+
+    for (const id of campaignIds) {
+      byCampaign.set(id, {
+        recommenders: new Set(),
+        clicks: 0,
+        orders: 0,
+        revenueMinor: 0,
+      });
+    }
+
+    for (const link of links) {
+      if (!link.campaign_id) continue;
+      const entry = byCampaign.get(link.campaign_id);
+      if (!entry) continue;
+      entry.recommenders.add(link.user_id);
+      entry.clicks += clicksByLink.get(link.id) ?? 0;
+    }
+
+    for (const attr of attrsRes.data ?? []) {
+      const entry = byCampaign.get(attr.campaign_id);
+      if (!entry) continue;
+      if (attr.status === "confirmed" || attr.status === "pending") {
+        entry.orders += 1;
+        entry.revenueMinor += attr.order_amount_minor;
+      }
+    }
+
+    return campaignIds.map((id) => {
+      const entry = byCampaign.get(id)!;
+      return {
+        campaignId: id,
+        recommenders: entry.recommenders.size,
+        clicks: entry.clicks,
+        orders: entry.orders,
+        revenueMinor: entry.revenueMinor,
+      };
+    });
   },
 
   async getAdminKpis() {

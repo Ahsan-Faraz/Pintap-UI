@@ -63,6 +63,13 @@ const LOGIN_ACCOUNTS: Record<string, { userId: string; defaultPath: string }> = 
   "user@pintap.com": { userId: "user-amara", defaultPath: "/app" },
   "merchant@pintap.com": { userId: "user-mira", defaultPath: "/merchant" },
   "admin@pintap.com": { userId: "user-jordan", defaultPath: "/admin" },
+  "i222637@nu.edu.pk": { userId: "user-amara", defaultPath: "/app" },
+  "ahsanfaraz8535@gmail.com": { userId: "user-mira", defaultPath: "/merchant" },
+};
+/** Per-account passwords for mock login (falls back to PASSWORD). */
+const LOGIN_PASSWORDS: Record<string, string> = {
+  "i222637@nu.edu.pk": "Jan42007@",
+  "ahsanfaraz8535@gmail.com": "ahsan123",
 };
 
 function mapSocialProfiles(value: unknown): SocialProfile[] {
@@ -88,8 +95,10 @@ const mock: AuthService = {
   },
   async loginWithPassword(email, password) {
     await delay(450);
-    const account = LOGIN_ACCOUNTS[email.trim().toLowerCase()];
-    if (!account || password !== PASSWORD) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const account = LOGIN_ACCOUNTS[normalizedEmail];
+    const expectedPassword = LOGIN_PASSWORDS[normalizedEmail] ?? PASSWORD;
+    if (!account || password !== expectedPassword) {
       throw new Error("Invalid email or password.");
     }
     const d = db();

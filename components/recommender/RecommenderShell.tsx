@@ -136,7 +136,7 @@ export default function RecommenderShell({
   );
 
   return (
-    <div className="min-h-screen bg-app-mesh text-navy">
+    <div className="min-h-screen bg-white text-navy">
       {/* Desktop sidebar */}
       <aside
         className={cn(
@@ -200,10 +200,13 @@ export default function RecommenderShell({
                 <Link
                   key={it.href}
                   href={it.href}
+                  onClick={() => setPendingHref(it.href)}
                   aria-label={t("nav.create")}
-                  className="grid h-12 w-12 -translate-y-3 touch-manipulation place-items-center rounded-full bg-orange text-white shadow-pop transition-transform duration-150 active:scale-90 focus-ring"
+                  className="flex flex-1 touch-manipulation items-center justify-center self-stretch rounded-input focus-ring"
                 >
-                  <PlusIcon />
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-orange text-white shadow-pop transition-transform duration-150 active:scale-90 [&>svg]:h-7 [&>svg]:w-7">
+                    <PlusIcon />
+                  </span>
                 </Link>
               );
             }

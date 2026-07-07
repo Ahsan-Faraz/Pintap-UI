@@ -11,7 +11,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed:demo-user": "node scripts/seed-demo-user.mjs",
+    "seed:merchant-demo": "node scripts/seed-merchant-demo.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.0",

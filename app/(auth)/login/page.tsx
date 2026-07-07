@@ -3,14 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Logo from "@/components/ui/Logo";
-import Button from "@/components/ui/Button";
+import AuthBrandMark, { EyeIcon, GoogleIcon } from "@/components/auth/AuthBrandMark";
 import { Field, Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { useAppContext } from "@/context/AppProvider";
 import { useT } from "@/context/I18nProvider";
 import { translateError } from "@/lib/i18n/errors";
 import { authService } from "@/services";
+
+const HERO_EARN_GREEN = "#1E6B52";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,97 +41,145 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-6 flex justify-center">
-        <Logo className="scale-110" />
-      </div>
+    <div className="auth-split-screen flex h-screen min-h-0 overflow-hidden">
+      {/* Left hero — desktop */}
+      <aside className="relative hidden w-[44%] shrink-0 flex-col justify-between bg-navy px-10 py-10 text-white lg:flex xl:px-14">
+        <div>
+          <AuthBrandMark inverted showBeta />
+          <h2 className="mt-12 max-w-md text-[2.65rem] font-extrabold leading-[1.1] tracking-tight xl:mt-14 xl:text-[2.75rem]">
+            {t("auth.login.heroHeadline")}
+          </h2>
+          <div className="mt-10 rounded-card border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <span
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-lg font-bold text-white"
+                style={{ backgroundColor: HERO_EARN_GREEN }}
+              >
+                €
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-white">
+                  {t("auth.login.heroEarned")}
+                </p>
+                <p className="mt-0.5 text-xs text-white/55">
+                  {t("auth.login.heroEarnedSub")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p className="text-sm text-white/40">{t("auth.login.copyright")}</p>
+      </aside>
 
-      <div className="rounded-[2rem] border border-navy/10 bg-surface p-6 shadow-[0_24px_60px_rgba(0,46,81,0.14)] sm:p-8">
-        <h1 className="text-center text-xl font-extrabold text-navy">
-          {t("auth.login.title")}
-        </h1>
-        <p className="mt-1 text-center text-sm text-navy/55">
-          {t("auth.login.subtitle")}
-        </p>
-
-        <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
-          <Field label={t("auth.login.email")} htmlFor="email">
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder={t("auth.login.emailPlaceholder")}
-              spellCheck={false}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </Field>
-          <Field label={t("auth.login.password")} htmlFor="password" error={error ?? undefined}>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </Field>
-
-          <div className="-mt-2 text-right">
-            <Link
-              href="/forgot-password"
-              className="rounded-input text-sm font-semibold text-navy/55 transition hover:text-navy focus-ring"
-            >
-              {t("auth.login.forgotPassword")}
-            </Link>
+      {/* Right form */}
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto bg-[#f7f8fa] px-5 py-8 sm:px-8 lg:overflow-hidden lg:py-6">
+        <div className="w-full max-w-[420px]">
+          <div className="mb-6 flex justify-center lg:hidden">
+            <AuthBrandMark showBeta />
           </div>
 
-          <Button
-            type="submit"
-            fullWidth
-            loading={submitting}
-            disabled={!email || !password}
-          >
-            {t("auth.login.logIn")}
-          </Button>
-        </form>
+          <h1 className="text-center text-[1.75rem] font-extrabold tracking-tight text-navy">
+            {t("auth.login.title")}
+          </h1>
+          <p className="mt-1.5 text-center text-sm text-navy/55">
+            {t("auth.login.subtitle")}
+          </p>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-navy/40">
-          <span className="h-px flex-1 bg-navy/15" />
-          {t("auth.login.or")}
-          <span className="h-px flex-1 bg-navy/15" />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Button
-            variant="secondary"
-            fullWidth
+          <button
+            type="button"
             disabled
+            className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-input border border-navy/12 bg-white text-sm font-semibold text-navy shadow-sm"
           >
+            <GoogleIcon />
             {t("auth.login.continueGoogle")}
-          </Button>
-          <Button
-            variant="ghost"
-            fullWidth
-            disabled
-          >
-            {t("auth.login.magicLink")}
-          </Button>
+          </button>
+
+          <div className="my-5 flex items-center gap-3 text-xs text-navy/40">
+            <span className="h-px flex-1 bg-navy/12" />
+            {t("auth.login.orWithEmail")}
+            <span className="h-px flex-1 bg-navy/12" />
+          </div>
+
+          <form onSubmit={submit} className="flex flex-col gap-3.5">
+            <Field label={t("auth.login.email")} htmlFor="email">
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder={t("auth.login.emailPlaceholder")}
+                spellCheck={false}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </Field>
+
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-semibold text-navy"
+                >
+                  {t("auth.login.password")}
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-semibold text-orange hover:underline focus-ring"
+                >
+                  {t("auth.login.forgotShort")}
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-11"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={t("auth.signup.togglePassword")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-navy/35 transition hover:text-navy/60 focus-ring"
+                >
+                  <EyeIcon className="h-5 w-5" />
+                </button>
+              </div>
+              {error ? (
+                <p className="text-xs font-medium text-red-600" aria-live="polite">
+                  {error}
+                </p>
+              ) : null}
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting || !email || !password}
+              className="mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-orange text-base font-bold text-white shadow-[0_14px_32px_rgba(250,80,4,0.38)] transition hover:bg-orange-hover active:scale-[0.98] focus-ring disabled:pointer-events-none disabled:opacity-50"
+            >
+              {submitting ? (
+                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : null}
+              {t("auth.login.logIn")}
+            </button>
+          </form>
+
+          <p className="mt-5 text-center text-sm text-navy/55">
+            {t("auth.login.newToPintap")}{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-orange hover:underline focus-ring"
+            >
+              {t("auth.login.createAccount")}
+            </Link>
+          </p>
         </div>
       </div>
-
-      <p className="mt-6 text-center text-sm text-navy/55">
-        {t("auth.login.newToPintap")}{" "}
-        <Link
-          href="/signup"
-          className="rounded-input font-semibold text-orange hover:underline focus-ring"
-        >
-          {t("auth.login.createAccount")}
-        </Link>
-      </p>
     </div>
   );
 }

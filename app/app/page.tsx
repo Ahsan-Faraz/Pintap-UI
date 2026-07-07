@@ -5,7 +5,6 @@ import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 import Skeleton from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
-import QuickCreate from "@/components/recommender/QuickCreate";
 import LinkCard from "@/components/recommender/LinkCard";
 import StoreCard from "@/components/recommender/StoreCard";
 import CardRail from "@/components/recommender/CardRail";
@@ -66,26 +65,33 @@ export default function RecommenderHomePage() {
   const links = data?.links ?? [];
   const shops = data?.shops ?? [];
 
-  const greeting = user
-    ? t("dashboard.user.greeting", { name: user.firstName })
+  // Render the greeting with the user's name in bold. We interpolate a sentinel
+  // in place of the name, then split around it so the name can be wrapped in a
+  // <strong> regardless of locale word order ("Hi {name}!" / "Hallo {name}!").
+  const NAME_TOKEN = "\uFFFF";
+  const greetingRaw = user
+    ? t("dashboard.user.greeting", { name: NAME_TOKEN })
     : t("dashboard.user.welcomeBack");
+  const [greetBefore, greetAfter] = greetingRaw.split(NAME_TOKEN);
 
   return (
     <div className="mx-auto max-w-lg sm:max-w-5xl">
       {/* Hero dashboard card */}
-      <div className="dashboard-hero-card relative overflow-hidden p-5 sm:p-6">
+      <div className="dashboard-hero-card relative flex min-h-[264px] flex-col overflow-hidden p-5 sm:min-h-[308px] sm:p-8">
         <DashboardHeroPattern />
 
-        <div className="relative max-w-[72%] space-y-1 sm:max-w-[65%]">
-          <p className="text-lg font-normal leading-snug text-white sm:text-[22px]">
-            {greeting}
+        <div className="relative max-w-[74%] space-y-1.5 sm:max-w-[65%]">
+          <p className="text-2xl font-normal leading-snug text-white sm:text-[30px]">
+            {greetBefore}
+            {user && <span className="font-bold">{user.firstName}</span>}
+            {greetAfter ?? ""}
           </p>
-          <p className="text-base font-normal leading-snug text-white/90 sm:text-lg">
+          <p className="text-lg font-normal leading-snug text-white/90 sm:text-2xl">
             {t("dashboard.user.subtitle")}
           </p>
         </div>
 
-        <div className="relative mt-6 grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="relative mt-auto grid grid-cols-3 gap-2 pt-10 sm:gap-4">
           <HeroStat
             label={t("dashboard.user.totalClicks")}
             value={kpis ? formatNumber(kpis.clicks) : "—"}
@@ -107,11 +113,6 @@ export default function RecommenderHomePage() {
             accent
           />
         </div>
-      </div>
-
-      {/* Create-link — functionality preserved, clay styled */}
-      <div className="mt-4">
-        <QuickCreate />
       </div>
 
       {/* My Links — horizontal rail */}
@@ -237,21 +238,21 @@ function HeroStat({
   accent?: boolean;
 }) {
   return (
-    <div className="text-center">
+    <div className="text-left">
+      <p className="text-[11px] font-semibold text-white/70 sm:text-xs">
+        {label}
+      </p>
       {loading ? (
-        <Skeleton className="mx-auto h-7 w-16 bg-white/20" />
+        <Skeleton className="mt-1 h-9 w-20 bg-white/20 sm:h-12" />
       ) : (
         <p
-          className={`text-xl font-normal tracking-tight sm:text-2xl ${
+          className={`mt-0.5 font-light leading-none tracking-tight text-4xl sm:text-5xl ${
             accent ? "text-green" : "text-white"
           }`}
         >
           {value}
         </p>
       )}
-      <p className="mt-0.5 text-[11px] font-semibold text-white/70 sm:text-xs">
-        {label}
-      </p>
     </div>
   );
 }

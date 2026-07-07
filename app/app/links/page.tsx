@@ -24,7 +24,7 @@ type StatusFilter = "default" | LinkStatus;
 export default function MyLinksPage() {
   const t = useT();
   const [sort, setSort] = useState<SortOrder>("newest");
-  const [status, setStatus] = useState<StatusFilter>("default");
+  const [status, setStatus] = useState<StatusFilter>("active");
   const [campaign, setCampaign] =
     useState<NonNullable<LinkListFilters["campaign"]>>("all");
   const [selectedLink, setSelectedLink] = useState<LinkSummary | null>(null);
@@ -40,16 +40,8 @@ export default function MyLinksPage() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader
-        title={t("appPages.links.title")}
-        description={t("appPages.links.description")}
-        actions={
-          <Link href="/app/create-link" className={buttonClasses({})}>
-            {t("appPages.links.newLink")}
-          </Link>
-        }
-      />
+    <div className="mx-auto max-w-5xl">
+      <PageHeader title={t("appPages.links.title")} />
 
       <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Select
@@ -70,9 +62,7 @@ export default function MyLinksPage() {
           value={status}
           onChange={(e) => setStatus(e.target.value as StatusFilter)}
         >
-          <option value="default">{t("appPages.links.statusDefault")}</option>
           <option value="active">{t("appPages.links.statusActive")}</option>
-          <option value="inactive">{t("appPages.links.statusInactive")}</option>
           <option value="deleted">{t("status.deleted")}</option>
         </Select>
         <Select
@@ -91,9 +81,9 @@ export default function MyLinksPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-28" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-[248px] rounded-card" />
           ))}
         </div>
       ) : !links || links.length === 0 ? (
@@ -107,9 +97,14 @@ export default function MyLinksPage() {
           }
         />
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {links.map((l) => (
-            <LinkCard key={l.id} link={l} onSelect={setSelectedLink} />
+            <LinkCard
+              key={l.id}
+              link={l}
+              onSelect={setSelectedLink}
+              variant="rail"
+            />
           ))}
         </div>
       )}

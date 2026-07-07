@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "@/components/ui/Logo";
+import Thumb from "@/components/ui/Thumb";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { MenuIcon, SearchIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
@@ -32,12 +33,17 @@ export default function PortalShell({
   sectionKey,
   groups,
   profileHref,
+  appearance = "default",
+  merchantStore,
   children,
 }: {
   /** Translation key for the portal name shown above the nav (e.g. "section.admin"). */
   sectionKey: string;
   groups: NavGroup[];
   profileHref?: string;
+  /** Merchant portal uses a navy sidebar matching the desktop mock. */
+  appearance?: "default" | "merchant";
+  merchantStore?: { name: string; logoUrl: string | null };
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -52,6 +58,8 @@ export default function PortalShell({
       ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
 
+  const isMerchant = appearance === "merchant";
+
   const sidebar = (showLabels: boolean) => (
     <div className="flex h-full flex-col">
       <div
@@ -60,15 +68,91 @@ export default function PortalShell({
           showLabels ? "px-5" : "justify-center px-2",
         )}
       >
-        <Logo markOnly={!showLabels} />
+        {isMerchant ? (
+          <div className={cn("flex items-center gap-2", !showLabels && "justify-center")}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/pintap-icon.svg"
+              alt=""
+              aria-hidden
+              className="h-7 w-7 shrink-0 brightness-0 invert"
+              draggable={false}
+            />
+            {showLabels && (
+              <>
+                <span className="text-lg font-bold tracking-tight text-white">
+                  pintap
+                </span>
+                <span className="rounded-full border border-white/45 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold lowercase leading-none text-white">
+                  beta
+                </span>
+              </>
+            )}
+          </div>
+        ) : (
+          <Logo markOnly={!showLabels} />
+        )}
       </div>
-      {showLabels && (
+      {showLabels && merchantStore && isMerchant && (
+        <div className="mx-3 mb-4 flex items-center gap-3 rounded-card bg-white/10 p-3">
+          <Thumb
+            src={merchantStore.logoUrl}
+            alt={merchantStore.name}
+            className="h-10 w-10 shrink-0 rounded-input bg-white/20"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-white">
+              {merchantStore.name}
+            </p>
+            <p className="text-xs text-white/55">
+              {t("merchantPages.orders.merchantLabel")}
+            </p>
+          </div>
+        </div>
+      )}
+      {showLabels && !isMerchant && (
         <p className="px-5 pb-3 text-xs font-bold uppercase tracking-[0.12em] text-navy/44">
           {t(sectionKey)}
         </p>
       )}
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
-        {groups.map((group, gi) => (
+      <nav
+        className={cn(
+          "flex-1 overflow-y-auto px-3 pb-4",
+          isMerchant ? "space-y-1" : "space-y-5",
+        )}
+      >
+        {isMerchant
+          ? groups.flatMap((g) => g.items).map((it) => {
+              const active = isActive(it.href);
+              const label = t(it.labelKey);
+              return (
+                <Link
+                  key={it.href}
+                  href={it.href}
+                  onClick={() => setOpen(false)}
+                  title={showLabels ? undefined : label}
+                  aria-label={label}
+                  className={cn(
+                    "group flex items-center gap-3 rounded-input px-3 py-2.5 text-sm font-semibold transition",
+                    !showLabels && "justify-center px-2",
+                    active
+                      ? "bg-orange text-white"
+                      : "text-white/70 hover:bg-white/10 hover:text-white",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition [&>svg]:h-4 [&>svg]:w-4",
+                      active ? "text-white" : "text-white/80",
+                    )}
+                  >
+                    {it.icon}
+                  </span>
+                  {showLabels && <span className="flex-1">{label}</span>}
+                </Link>
+              );
+            })
+          : groups.map((group, gi) => (
           <div key={group.labelKey ?? gi} className="space-y-1">
             {showLabels && group.labelKey && (
               <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-navy/35">
@@ -118,12 +202,18 @@ export default function PortalShell({
     .map((it) => ({ href: it.href, label: t(it.labelKey), icon: it.icon }));
 
   return (
-    <div className="min-h-screen bg-app-mesh text-navy">
+    <div
+      className={cn(
+        "min-h-screen text-navy",
+        isMerchant ? "bg-[#f4f6f8]" : "bg-app-mesh",
+      )}
+    >
       {/* Desktop sidebar (fixed rail) */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-navy/10 bg-surface shadow-rail transition-[width] duration-200 lg:flex",
+          "fixed inset-y-0 left-0 z-40 hidden flex-col shadow-rail transition-[width] duration-200 lg:flex",
           collapsed ? "w-[88px]" : "w-[280px]",
+          isMerchant ? "bg-navy" : "border-r border-navy/10 bg-surface",
         )}
       >
         {sidebar(!collapsed)}
@@ -147,8 +237,9 @@ export default function PortalShell({
         />
         <aside
           className={cn(
-            "absolute inset-y-0 left-0 w-[280px] overscroll-contain border-r border-navy/10 bg-surface shadow-pop transition-transform duration-300 ease-out",
+            "absolute inset-y-0 left-0 w-[280px] overscroll-contain shadow-pop transition-transform duration-300 ease-out",
             open ? "translate-x-0" : "-translate-x-full",
+            isMerchant ? "bg-navy" : "border-r border-navy/10 bg-surface",
           )}
         >
           {sidebar(true)}

@@ -9,7 +9,7 @@ import Badge from "@/components/ui/Badge";
 import PasteButton from "@/components/ui/PasteButton";
 import Thumb from "@/components/ui/Thumb";
 import Spinner from "@/components/ui/Spinner";
-import LinkPreviewModal from "@/components/recommender/LinkPreviewModal";
+import CreateLinkShareView from "@/components/recommender/CreateLinkShareView";
 import { useToast } from "@/components/ui/Toast";
 import { useT } from "@/context/I18nProvider";
 import { translateError, translateMessage } from "@/lib/i18n/errors";
@@ -118,6 +118,12 @@ export default function CreateLinkPage() {
   const hasClaimableCampaign = verification?.campaignOptions.some(
     (c) => c.codesAvailable > 0,
   );
+
+  if (created) {
+    return (
+      <CreateLinkShareView link={created} onBack={reset} />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-xl">
@@ -317,13 +323,6 @@ export default function CreateLinkPage() {
           </div>
         </div>
       )}
-
-      {/* R-03: link preview popup. Closing it resets the page for the next link. */}
-      <LinkPreviewModal
-        link={created}
-        open={Boolean(created)}
-        onClose={reset}
-      />
     </div>
   );
 }

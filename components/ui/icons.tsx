@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  Clock,
   Clipboard,
   Compass,
   Copy,
@@ -74,6 +75,7 @@ export const ReceiptIcon = make(Receipt);
 export const HelpIcon = make(HelpCircle);
 export const StoreIcon = make(Store);
 export const TagIcon = make(Tag);
+export const ClockIcon = make(Clock);
 export const CardIcon = make(CreditCard);
 export const SettingsIcon = make(Settings);
 export const GaugeIcon = make(Gauge);

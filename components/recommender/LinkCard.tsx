@@ -22,7 +22,7 @@ export default function LinkCard({
   const t = useT();
 
   const className = cn(
-    "flex h-full w-full min-w-0 flex-col text-left transition-[transform,box-shadow] focus-ring active:scale-[0.98]",
+    "relative flex h-full w-full min-w-0 flex-col text-left transition-[transform,box-shadow] focus-ring active:scale-[0.98]",
     variant === "rail"
       ? "app-flat-card min-h-[248px] overflow-hidden p-4 transition-shadow hover:shadow-float"
       : "rounded-card border border-navy/10 bg-surface p-3 shadow-card hover:-translate-y-0.5 hover:border-orange/30 hover:shadow-float",
@@ -31,7 +31,7 @@ export default function LinkCard({
   const inner =
     variant === "rail" ? (
       <>
-        <div className="mb-2">
+        <span className="absolute right-3 top-3 z-10">
           {link.campaign ? (
             <Badge tone="success" className="text-[10px]">
               {t("links.campaign")}
@@ -41,8 +41,8 @@ export default function LinkCard({
               {t("links.noCampaign")}
             </Badge>
           )}
-        </div>
-        <div className="flex flex-1 flex-col items-center pb-2">
+        </span>
+        <div className="flex flex-1 flex-col items-center pb-2 pt-1">
           <Thumb
             src={link.imageUrl}
             alt={link.name}

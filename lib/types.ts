@@ -402,6 +402,15 @@ export interface MerchantKpis {
   currency: string;
 }
 
+/** Per-campaign performance for the merchant campaigns listing. */
+export interface CampaignMetrics {
+  campaignId: string;
+  recommenders: number;
+  clicks: number;
+  orders: number;
+  revenueMinor: number;
+}
+
 export interface AdminKpis {
   users: number;
   connectedStores: number;
