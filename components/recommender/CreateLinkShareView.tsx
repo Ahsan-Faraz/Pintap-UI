@@ -256,7 +256,7 @@ function StepRow({
       <span
         className={cn(
           "grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold text-white",
-          active && "bg-orange",
+          active !== undefined && "bg-orange",
         )}
         style={done ? { backgroundColor: STEP_GREEN } : undefined}
       >

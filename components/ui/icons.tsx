@@ -2,7 +2,7 @@
  * App icon set. Thin wrappers over lucide-react so every call site keeps the
  * same `{ className }` API and the project's default 20×20 / currentColor look.
  */
-import type { ComponentType } from "react";
+import type { ComponentType, CSSProperties } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -53,12 +53,17 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type IconProps = { className?: string };
+type IconProps = { className?: string; style?: CSSProperties };
 
 /** Wrap a lucide icon so it inherits the legacy default size + currentColor. */
 function make(Icon: ComponentType<LucideProps>) {
-  const Wrapped = ({ className }: IconProps) => (
-    <Icon className={cn("h-5 w-5", className)} strokeWidth={2} aria-hidden="true" />
+  const Wrapped = ({ className, style }: IconProps) => (
+    <Icon
+      className={cn("h-5 w-5", className)}
+      style={style}
+      strokeWidth={2}
+      aria-hidden="true"
+    />
   );
   Wrapped.displayName = Icon.displayName ?? "Icon";
   return Wrapped;
