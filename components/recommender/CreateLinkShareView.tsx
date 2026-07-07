@@ -10,6 +10,7 @@ import {
   CopyIcon,
   ShareIcon,
 } from "@/components/ui/icons";
+import CreateLinkStepper from "@/components/recommender/CreateLinkStepper";
 import { useToast } from "@/components/ui/Toast";
 import { useT } from "@/context/I18nProvider";
 import type { LinkDetail } from "@/lib/types";
@@ -17,23 +18,6 @@ import { formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const STEP_GREEN = "#086838";
-
-function StepCheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={3}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("h-4 w-4", className)}
-      aria-hidden
-    >
-      <path d="M5 13l4 4L19 7" />
-    </svg>
-  );
-}
 
 function MessageBubbleIcon({ className }: { className?: string }) {
   return (
@@ -115,14 +99,8 @@ export default function CreateLinkShareView({
         </h1>
       </div>
 
-      {/* Stepper — label beside circle, darker green connectors */}
-      <div className="mb-8 flex items-center justify-center gap-1.5 sm:gap-2">
-        <StepRow done label={t("appPages.createLink.stepUrl")} />
-        <StepConnector done />
-        <StepRow done label={t("appPages.createLink.stepCampaign")} />
-        <StepConnector done />
-        <StepRow active={3} label={t("appPages.createLink.stepShare")} />
-      </div>
+      {/* Stepper */}
+      <CreateLinkStepper step={3} />
 
       {/* Success */}
       <div className="mb-6 text-center">
@@ -239,41 +217,6 @@ export default function CreateLinkShareView({
         </Link>
       </div>
     </div>
-  );
-}
-
-function StepRow({
-  done,
-  active,
-  label,
-}: {
-  done?: boolean;
-  active?: number;
-  label: string;
-}) {
-  return (
-    <div className="flex shrink-0 items-center gap-2">
-      <span
-        className={cn(
-          "grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold text-white",
-          active !== undefined && "bg-orange",
-        )}
-        style={done ? { backgroundColor: STEP_GREEN } : undefined}
-      >
-        {done ? <StepCheckIcon /> : active}
-      </span>
-      <span className="whitespace-nowrap text-sm font-bold text-navy">{label}</span>
-    </div>
-  );
-}
-
-function StepConnector({ done }: { done?: boolean }) {
-  return (
-    <div
-      className="h-0.5 w-6 shrink-0 sm:w-10"
-      style={{ backgroundColor: done ? STEP_GREEN : undefined }}
-      aria-hidden
-    />
   );
 }
 

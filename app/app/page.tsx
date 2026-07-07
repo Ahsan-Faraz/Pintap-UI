@@ -11,6 +11,7 @@ import CardRail from "@/components/recommender/CardRail";
 import LinkPreviewModal from "@/components/recommender/LinkPreviewModal";
 import ShopDetailsSheet from "@/components/recommender/ShopDetailsSheet";
 import DashboardHeroPattern from "@/components/recommender/DashboardHeroPattern";
+import RecommenderHomeDesktop from "@/components/recommender/RecommenderHomeDesktop";
 import { ChevronRightIcon } from "@/components/ui/icons";
 import { useAppContext } from "@/context/AppProvider";
 import { useAsync } from "@/lib/hooks";
@@ -75,6 +76,14 @@ export default function RecommenderHomePage() {
   const [greetBefore, greetAfter] = greetingRaw.split(NAME_TOKEN);
 
   return (
+    <>
+      {userId && user ? (
+        <div className="hidden lg:block">
+          <RecommenderHomeDesktop userId={userId} firstName={user.firstName} />
+        </div>
+      ) : null}
+
+      <div className={userId ? "lg:hidden" : ""}>
     <div className="mx-auto max-w-lg sm:max-w-5xl">
       {/* Hero dashboard card */}
       <div className="dashboard-hero-card relative flex min-h-[264px] flex-col overflow-hidden p-5 sm:min-h-[308px] sm:p-8">
@@ -223,6 +232,8 @@ export default function RecommenderHomePage() {
         onClose={() => setSelectedShop(null)}
       />
     </div>
+      </div>
+    </>
   );
 }
 

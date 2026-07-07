@@ -65,7 +65,10 @@ export function Select({
   ...props
 }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cn(baseField, "h-11 pr-8", className)} {...props}>
+    <select
+      className={cn(baseField, "h-11 max-w-full pr-8", className)}
+      {...props}
+    >
       {children}
     </select>
   );

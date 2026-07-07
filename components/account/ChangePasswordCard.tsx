@@ -56,6 +56,7 @@ export default function ChangePasswordCard() {
   }
 
   return (
+    <div id="security">
     <Section
       title={t("account.passwordTitle")}
       description={t("account.passwordDescription")}
@@ -111,5 +112,6 @@ export default function ChangePasswordCard() {
         </Button>
       </form>
     </Section>
+    </div>
   );
 }

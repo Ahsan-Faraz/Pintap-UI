@@ -1,9 +1,21 @@
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import {
+  buildRecommenderDashboard,
+  buildRecommenderDashboardFromRows,
+} from "@/lib/analytics-dashboard";
+import { buildMerchantDashboard } from "@/lib/merchant-dashboard";
 import { db } from "@/lib/mock/store";
 import type {
   AdminKpis,
   CampaignMetrics,
+  Link,
+  LinkOrderAttribution,
+  LinkType,
   MerchantKpis,
+  MerchantDashboard,
+  MerchantDashboardRange,
+  RecommenderDashboard,
+  RecommenderDashboardRange,
   RecommenderKpis,
 } from "@/lib/types";
 import { delay } from "@/lib/utils";
@@ -13,10 +25,19 @@ import {
 } from "@/lib/mock/queries";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { pick } from "./_runtime";
+import { mapAttribution } from "@/lib/supabase/mappers";
 
 export interface AnalyticsService {
   getRecommenderKpis(userId: string): Promise<RecommenderKpis>;
+  getRecommenderDashboard(
+    userId: string,
+    range: RecommenderDashboardRange,
+  ): Promise<RecommenderDashboard>;
   getMerchantKpis(storeId: string): Promise<MerchantKpis>;
+  getMerchantDashboard(
+    storeId: string,
+    range: MerchantDashboardRange,
+  ): Promise<MerchantDashboard>;
   getCampaignMetricsForStore(storeId: string): Promise<CampaignMetrics[]>;
   getAdminKpis(): Promise<AdminKpis>;
 }
@@ -72,6 +93,27 @@ const mock: AnalyticsService = {
     };
   },
 
+  async getRecommenderDashboard(userId, range) {
+    await delay();
+    const d = db();
+    const myLinks = d.links.filter(
+      (l) => l.userId === userId && l.status !== "deleted",
+    );
+    const storeNameById = new Map(d.stores.map((s) => [s.id, s.name]));
+    const campaignNameById = new Map(d.campaigns.map((c) => [c.id, c.name]));
+    const currency =
+      d.ledger.find((l) => l.userId === userId)?.currency ?? DEFAULT_CURRENCY;
+
+    return buildRecommenderDashboard(range, {
+      links: myLinks,
+      clicks: d.clicks,
+      attributions: d.attributions,
+      storeNameById,
+      campaignNameById,
+      currency,
+    });
+  },
+
   async getMerchantKpis(storeId) {
     await delay();
     const d = db();
@@ -98,6 +140,33 @@ const mock: AnalyticsService = {
       fundedBalanceMinor: fundedBalanceMinor(d, storeId),
       currency,
     };
+  },
+
+  async getMerchantDashboard(storeId, range) {
+    await delay();
+    const d = db();
+    const store = d.stores.find((s) => s.id === storeId);
+    const campaignIds = new Set(
+      d.campaigns.filter((c) => c.storeId === storeId).map((c) => c.id),
+    );
+    const storeLinks = d.links.filter(
+      (l) => l.storeId === storeId && l.status !== "deleted",
+    );
+    const attributions = d.attributions.filter((a) =>
+      campaignIds.has(a.campaignId),
+    );
+    const attrLinkIds = new Set(attributions.map((a) => a.linkId));
+    const attributionLinks = d.links.filter((l) => attrLinkIds.has(l.id));
+    return buildMerchantDashboard({
+      range,
+      currency: store?.currency ?? DEFAULT_CURRENCY,
+      campaignIds,
+      storeLinks,
+      attributionLinks,
+      clicks: d.clicks,
+      attributions,
+      profiles: d.profiles,
+    });
   },
 
   async getCampaignMetricsForStore(storeId) {
@@ -180,6 +249,99 @@ const real: AnalyticsService = {
     };
   },
 
+  async getRecommenderDashboard(userId, range) {
+    const supabase = createSupabaseBrowserClient();
+    const locale =
+      typeof document !== "undefined" &&
+      document.cookie.includes("NEXT_LOCALE=de")
+        ? "de-DE"
+        : "en-US";
+
+    const { data: linkRows } = await supabase
+      .from("links")
+      .select(
+        "id, name, image_url, brand, store_id, campaign_id, status, type, destination_url, source_host, short_code, short_url, user_id, discount_code_id, is_verified, created_at, updated_at, deleted_at",
+      )
+      .eq("user_id", userId)
+      .neq("status", "deleted");
+
+    const links: Link[] = (linkRows ?? []).map((l) => ({
+      id: l.id,
+      userId: l.user_id,
+      storeId: l.store_id,
+      campaignId: l.campaign_id,
+      discountCodeId: l.discount_code_id,
+      type: l.type as LinkType,
+      destinationUrl: l.destination_url,
+      sourceHost: l.source_host,
+      name: l.name,
+      brand: l.brand,
+      imageUrl: l.image_url,
+      isVerified: l.is_verified,
+      shortCode: l.short_code,
+      shortUrl: l.short_url,
+      status: l.status as Link["status"],
+      createdAt: l.created_at,
+      updatedAt: l.updated_at,
+      deletedAt: l.deleted_at,
+    }));
+
+    const linkIds = links.map((l) => l.id);
+    if (linkIds.length === 0) {
+      return buildRecommenderDashboard(range, {
+        links: [],
+        clicks: [],
+        attributions: [],
+        storeNameById: new Map(),
+        campaignNameById: new Map(),
+        locale,
+      });
+    }
+
+    const storeIds = [
+      ...new Set(links.map((l) => l.storeId).filter(Boolean)),
+    ] as string[];
+    const campaignIds = [
+      ...new Set(links.map((l) => l.campaignId).filter(Boolean)),
+    ] as string[];
+
+    const [storesRes, campaignsRes, clicksRes, attrsRes] = await Promise.all([
+      storeIds.length
+        ? supabase.from("stores").select("id, name").in("id", storeIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      campaignIds.length
+        ? supabase.from("campaigns").select("id, name").in("id", campaignIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      supabase
+        .from("link_clicks")
+        .select("link_id, clicked_at")
+        .in("link_id", linkIds),
+      supabase
+        .from("link_order_attributions")
+        .select(
+          "link_id, status, commission_amount_minor, currency, created_at",
+        )
+        .in("link_id", linkIds),
+    ]);
+
+    const storeNameById = new Map(
+      (storesRes.data ?? []).map((s) => [s.id, s.name]),
+    );
+    const campaignNameById = new Map(
+      (campaignsRes.data ?? []).map((c) => [c.id, c.name]),
+    );
+
+    return buildRecommenderDashboardFromRows(
+      range,
+      links,
+      clicksRes.data ?? [],
+      attrsRes.data ?? [],
+      storeNameById,
+      campaignNameById,
+      locale,
+    );
+  },
+
   async getMerchantKpis(storeId) {
     const supabase = createSupabaseBrowserClient();
     const { data: store } = await supabase
@@ -243,6 +405,146 @@ const real: AnalyticsService = {
       fundedBalanceMinor,
       currency,
     };
+  },
+
+  async getMerchantDashboard(storeId, range) {
+    const supabase = createSupabaseBrowserClient();
+    const { data: store } = await supabase
+      .from("stores")
+      .select("currency")
+      .eq("id", storeId)
+      .maybeSingle();
+    const currency = store?.currency ?? DEFAULT_CURRENCY;
+
+    const { data: campaigns } = await supabase
+      .from("campaigns")
+      .select("id")
+      .eq("store_id", storeId);
+    const campaignIds = new Set((campaigns ?? []).map((c) => c.id));
+    if (campaignIds.size === 0) {
+      return buildMerchantDashboard({
+        range,
+        currency,
+        campaignIds,
+        storeLinks: [],
+        attributionLinks: [],
+        clicks: [],
+        attributions: [],
+        profiles: [],
+      });
+    }
+
+    const { data: linkRows } = await supabase
+      .from("links")
+      .select(
+        "id, user_id, store_id, campaign_id, discount_code_id, type, destination_url, source_host, name, brand, image_url, is_verified, short_code, short_url, status, created_at, updated_at, deleted_at",
+      )
+      .eq("store_id", storeId)
+      .neq("status", "deleted");
+
+    const storeLinks: Link[] = (linkRows ?? []).map((l) => ({
+      id: l.id,
+      userId: l.user_id,
+      storeId: l.store_id,
+      campaignId: l.campaign_id,
+      discountCodeId: l.discount_code_id,
+      type: l.type as LinkType,
+      destinationUrl: l.destination_url,
+      sourceHost: l.source_host,
+      name: l.name,
+      brand: l.brand,
+      imageUrl: l.image_url,
+      isVerified: l.is_verified,
+      shortCode: l.short_code,
+      shortUrl: l.short_url,
+      status: l.status as Link["status"],
+      createdAt: l.created_at,
+      updatedAt: l.updated_at,
+      deletedAt: l.deleted_at,
+    }));
+
+    const storeLinkIds = storeLinks.map((l) => l.id);
+
+    const { data: attrRows } = await supabase
+      .from("link_order_attributions")
+      .select("*")
+      .in("campaign_id", [...campaignIds]);
+
+    const attributions = (attrRows ?? []).map(mapAttribution);
+    const attrLinkIds = [...new Set(attributions.map((a) => a.linkId))];
+
+    const [clicksRes, attrLinksRes] = await Promise.all([
+      storeLinkIds.length
+        ? supabase
+            .from("link_clicks")
+            .select("link_id, clicked_at")
+            .in("link_id", storeLinkIds)
+        : Promise.resolve({ data: [] as { link_id: string; clicked_at: string }[] }),
+      attrLinkIds.length
+        ? supabase
+            .from("links")
+            .select(
+              "id, user_id, store_id, campaign_id, discount_code_id, type, destination_url, source_host, name, brand, image_url, is_verified, short_code, short_url, status, created_at, updated_at, deleted_at",
+            )
+            .in("id", attrLinkIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const attributionLinks: Link[] = (attrLinksRes.data ?? []).map((l) => ({
+      id: l.id,
+      userId: l.user_id,
+      storeId: l.store_id,
+      campaignId: l.campaign_id,
+      discountCodeId: l.discount_code_id,
+      type: l.type as LinkType,
+      destinationUrl: l.destination_url,
+      sourceHost: l.source_host,
+      name: l.name,
+      brand: l.brand,
+      imageUrl: l.image_url,
+      isVerified: l.is_verified,
+      shortCode: l.short_code,
+      shortUrl: l.short_url,
+      status: l.status as Link["status"],
+      createdAt: l.created_at,
+      updatedAt: l.updated_at,
+      deletedAt: l.deleted_at,
+    }));
+    const userIds = [...new Set(attributionLinks.map((l) => l.userId))];
+
+    const { data: profileRows } = userIds.length
+      ? await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", userIds)
+      : { data: [] };
+
+    const clicks = (clicksRes.data ?? []).map((c) => ({
+      id: `${c.link_id}-${c.clicked_at}`,
+      linkId: c.link_id,
+      visitorHash: "",
+      userAgent: null,
+      countryCode: null,
+      source: null,
+      clickedAt: c.clicked_at,
+    }));
+
+    const profiles = (profileRows ?? []).map((p) => ({
+      id: p.id,
+      firstName: p.first_name,
+      lastName: p.last_name,
+    }));
+
+    return buildMerchantDashboard({
+      range,
+      currency,
+      campaignIds,
+      storeLinks,
+      attributionLinks,
+      clicks,
+      attributions,
+      profiles,
+    });
   },
 
   async getCampaignMetricsForStore(storeId) {

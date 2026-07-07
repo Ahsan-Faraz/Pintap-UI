@@ -1,31 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import PageHeader from "@/components/ui/PageHeader";
+import { useEffect, useMemo, useRef, useState } from "react";
+import PayoutBalanceCard from "@/components/recommender/PayoutBalanceCard";
 import KpiCard from "@/components/ui/KpiCard";
-import { Section } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/Badge";
-import Skeleton from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
+import Skeleton from "@/components/ui/Skeleton";
+import { Section } from "@/components/ui/Card";
 import { Field, Input } from "@/components/ui/Input";
+import { StatusBadge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import { CheckCircleIcon, EuroIcon } from "@/components/ui/icons";
 import { useAppContext } from "@/context/AppProvider";
-import { useT } from "@/context/I18nProvider";
+import { useT, useLocale } from "@/context/I18nProvider";
 import { useAsync } from "@/lib/hooks";
-import { payoutsService } from "@/services";
+import { ordersService, payoutsService } from "@/services";
 import { formatCurrencyMinor, formatDate } from "@/lib/format";
 import { MIN_PAYOUT_MINOR } from "@/lib/currency";
+import type { OrderSummary } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+type LedgerEntry = NonNullable<
+  Awaited<ReturnType<typeof payoutsService.getOverview>>
+>["ledger"][number];
+
+function formatPayoutDay(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale === "de" ? "de-DE" : "en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function ledgerTypeLabel(type: string): string {
+  return type.replace(/_/g, " ");
+}
 
 export default function PayoutsPage() {
   const { user } = useAppContext();
   const t = useT();
+  const { locale } = useLocale();
   const { toast } = useToast();
   const userId = user?.id;
+  const bankSectionRef = useRef<HTMLDivElement>(null);
 
   const { data, loading, reload } = useAsync(
     () => (userId ? payoutsService.getOverview(userId) : Promise.resolve(null)),
+    [userId],
+  );
+
+  const { data: orders } = useAsync(
+    () =>
+      userId ? ordersService.listOrdersForUser(userId) : Promise.resolve([]),
     [userId],
   );
 
@@ -34,12 +59,28 @@ export default function PayoutsPage() {
   const canRequestPayout = Boolean(
     data && data.availableMinor >= MIN_PAYOUT_MINOR && onboarded,
   );
-  const upcoming = (data?.ledger ?? []).filter((e) => e.status !== "paid");
-  const completed = (data?.ledger ?? []).filter((e) => e.status === "paid");
 
-  // --- bank details form -------------------------------------------------
+  const upcoming = useMemo(
+    () => (data?.ledger ?? []).filter((e) => e.status !== "paid"),
+    [data?.ledger],
+  );
+
+  const completed = useMemo(
+    () => (data?.ledger ?? []).filter((e) => e.status === "paid"),
+    [data?.ledger],
+  );
+
+  const orderByAttribution = useMemo(() => {
+    const map = new Map<string, OrderSummary>();
+    for (const o of orders ?? []) {
+      map.set(o.id, o);
+    }
+    return map;
+  }, [orders]);
+
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [requesting, setRequesting] = useState(false);
   const [form, setForm] = useState({
     accountHolder: "",
     iban: "",
@@ -59,9 +100,12 @@ export default function PayoutsPage() {
   }, [account]);
 
   const showForm = editing || !onboarded;
+  const currency = data?.currency ?? "EUR";
 
-  // --- request payout ------------------------------------------------------
-  const [requesting, setRequesting] = useState(false);
+  function scrollToBank() {
+    setEditing(true);
+    bankSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   async function requestPayout() {
     setRequesting(true);
@@ -101,63 +145,95 @@ export default function PayoutsPage() {
     }
   }
 
-  return (
-    <div className="mx-auto max-w-4xl">
-      <PageHeader
-        title={t("appPages.payouts.title")}
-        description={t("appPages.payouts.description")}
-      />
+  const heroLabels = {
+    availableBalance: t("appPages.payouts.availableBalance"),
+    thresholdRemaining: (remaining: string, threshold: string) =>
+      t("appPages.payouts.thresholdRemaining", { remaining, threshold }),
+    thresholdReady: t("appPages.payouts.thresholdReady"),
+    requestPayout: t("appPages.payouts.requestPayoutShort"),
+    bankDetails: t("appPages.payouts.bankDetails"),
+  };
 
-      <div className="mb-5 grid grid-cols-1 gap-3 min-[480px]:grid-cols-3">
-        <KpiCard
-          label={t("appPages.payouts.available")}
-          value={
-            data ? formatCurrencyMinor(data.availableMinor, data.currency) : "—"
-          }
-          icon={<EuroIcon />}
+  const requestHint = !onboarded
+    ? t("appPages.payouts.requestNeedsBank")
+    : data && data.availableMinor < MIN_PAYOUT_MINOR
+      ? t("appPages.payouts.requestBelowMinimum")
+      : null;
+
+  return (
+    <div className="mx-auto max-w-lg sm:max-w-4xl">
+      <div className="mb-5">
+        <h1 className="text-2xl font-extrabold tracking-tight text-navy">
+          {t("appPages.payouts.title")}
+        </h1>
+        <p className="mt-1 text-sm text-navy/55">
+          {t("appPages.payouts.description")}
+        </p>
+      </div>
+
+      {/* Hero — available balance (replaces duplicate Available KPI) */}
+      <div className="sm:hidden">
+        <PayoutBalanceCard
+          availableMinor={data?.availableMinor ?? 0}
+          currency={currency}
           loading={loading}
-          accent="green"
+          canRequest={canRequestPayout}
+          requesting={requesting}
+          onRequestPayout={() => void requestPayout()}
+          onBankDetails={scrollToBank}
+          labels={heroLabels}
+          showActions
         />
+      </div>
+      <div className="hidden sm:block">
+        <PayoutBalanceCard
+          availableMinor={data?.availableMinor ?? 0}
+          currency={currency}
+          loading={loading}
+          labels={heroLabels}
+          showActions={false}
+        />
+      </div>
+
+      {/* Pending + paid out only — available is on the hero card */}
+      <div className="mt-5 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
         <KpiCard
           label={t("appPages.payouts.pending")}
           value={
-            data ? formatCurrencyMinor(data.pendingMinor, data.currency) : "—"
+            data ? formatCurrencyMinor(data.pendingMinor, currency) : "—"
           }
           icon={<EuroIcon />}
           loading={loading}
         />
         <KpiCard
           label={t("appPages.payouts.paidOut")}
-          value={
-            data ? formatCurrencyMinor(data.paidMinor, data.currency) : "—"
-          }
+          value={data ? formatCurrencyMinor(data.paidMinor, currency) : "—"}
           icon={<EuroIcon />}
           loading={loading}
         />
       </div>
 
-      {/* Request payout once available balance reaches the minimum threshold. */}
-      <div className="mb-5">
+      <div className="mt-5 hidden sm:block">
         <Button
           fullWidth
-          onClick={requestPayout}
+          onClick={() => void requestPayout()}
           loading={requesting}
           disabled={!canRequestPayout}
         >
           {t("appPages.payouts.requestPayment")}
         </Button>
-        {!onboarded ? (
-          <p className="mt-2 text-center text-xs text-navy/55">
-            {t("appPages.payouts.requestNeedsBank")}
-          </p>
-        ) : data && data.availableMinor < MIN_PAYOUT_MINOR ? (
-          <p className="mt-2 text-center text-xs text-navy/55">
-            {t("appPages.payouts.requestBelowMinimum")}
-          </p>
+        {requestHint ? (
+          <p className="mt-2 text-center text-xs text-navy/55">{requestHint}</p>
         ) : null}
       </div>
 
-      <div className="mb-5">
+      {requestHint ? (
+        <p className="mt-3 text-center text-xs text-navy/55 sm:hidden">
+          {requestHint}
+        </p>
+      ) : null}
+
+      <div id="bank-details" ref={bankSectionRef} className="mt-5 scroll-mt-4">
         <Section title={t("appPages.payouts.method")}>
           {loading ? (
             <Skeleton className="h-16 w-full" />
@@ -204,7 +280,10 @@ export default function PayoutsPage() {
                     }
                   />
                 </Field>
-                <Field label={t("appPages.payouts.bankName")} htmlFor="bank-name">
+                <Field
+                  label={t("appPages.payouts.bankName")}
+                  htmlFor="bank-name"
+                >
                   <Input
                     id="bank-name"
                     name="bankName"
@@ -217,10 +296,10 @@ export default function PayoutsPage() {
                 </Field>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <Button onClick={saveDetails} loading={saving}>
+                <Button onClick={() => void saveDetails()} loading={saving}>
                   {t("appPages.payouts.saveDetails")}
                 </Button>
-                {onboarded && (
+                {onboarded ? (
                   <Button
                     variant="ghost"
                     onClick={() => setEditing(false)}
@@ -228,7 +307,7 @@ export default function PayoutsPage() {
                   >
                     {t("common.cancel")}
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
           ) : (
@@ -258,15 +337,24 @@ export default function PayoutsPage() {
         </Section>
       </div>
 
-      <Section title={t("appPages.payouts.upcoming")}>
+      <Section title={t("appPages.payouts.upcoming")} className="mt-5">
         {loading ? (
           <Skeleton className="h-40 w-full" />
         ) : upcoming.length === 0 ? (
           <EmptyState title={t("appPages.payouts.emptyUpcoming")} />
         ) : (
           <div className="divide-y divide-stroke">
-            {upcoming.map((e) => (
-              <LedgerRow key={e.id} entry={e} />
+            {upcoming.map((entry) => (
+              <LedgerRow
+                key={entry.id}
+                entry={entry}
+                order={
+                  entry.attributionId
+                    ? orderByAttribution.get(entry.attributionId)
+                    : undefined
+                }
+                locale={locale}
+              />
             ))}
           </div>
         )}
@@ -279,8 +367,12 @@ export default function PayoutsPage() {
           <EmptyState title={t("appPages.payouts.emptyCompleted")} />
         ) : (
           <div className="divide-y divide-stroke">
-            {completed.map((e) => (
-              <LedgerRow key={e.id} entry={e} />
+            {completed.map((entry) => (
+              <LedgerRow
+                key={entry.id}
+                entry={entry}
+                locale={locale}
+              />
             ))}
           </div>
         )}
@@ -289,27 +381,50 @@ export default function PayoutsPage() {
   );
 }
 
-type LedgerEntry = NonNullable<
-  Awaited<ReturnType<typeof payoutsService.getOverview>>
->["ledger"][number];
+function LedgerRow({
+  entry,
+  order,
+  locale,
+}: {
+  entry: LedgerEntry;
+  order?: OrderSummary;
+  locale: string;
+}) {
+  const t = useT();
+  const orderLabel = order?.orderNumber
+    ? order.orderNumber.startsWith("#")
+      ? order.orderNumber
+      : `#${order.orderNumber}`
+    : null;
 
-function LedgerRow({ entry }: { entry: LedgerEntry }) {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
-      <div>
+      <div className="min-w-0">
         <p className="text-sm font-semibold capitalize text-navy">
-          {entry.type.replace(/_/g, " ")}
+          {ledgerTypeLabel(entry.type)}
         </p>
-        <p className="text-xs text-navy/50">
-          {formatDate(entry.createdAt)}
-        </p>
+        <p className="text-xs text-navy/50">{formatDate(entry.createdAt)}</p>
+        {order ? (
+          <p className="mt-0.5 truncate text-xs text-navy/45">
+            {orderLabel ? `Order ${orderLabel}` : "Order"} ·{" "}
+            {order.link?.name ?? "—"}
+          </p>
+        ) : null}
+        {entry.availableAt && entry.status === "pending" ? (
+          <p className="mt-0.5 text-xs text-navy/45">
+            {t("appPages.payouts.clearsOn", {
+              date: formatPayoutDay(entry.availableAt, locale),
+            })}
+          </p>
+        ) : null}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <StatusBadge status={entry.status} />
         <span
-          className={`text-sm font-bold ${
-            entry.amountMinor < 0 ? "text-red-600" : "text-navy"
-          }`}
+          className={cn(
+            "text-sm font-bold tabular-nums",
+            entry.amountMinor < 0 ? "text-red-600" : "text-navy",
+          )}
         >
           {formatCurrencyMinor(entry.amountMinor, entry.currency)}
         </span>

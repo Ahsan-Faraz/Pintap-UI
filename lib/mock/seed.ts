@@ -802,7 +802,7 @@ export function createSeedData(): MockDb {
       commissionAmountMinor: 1068,
       currency: "EUR",
       source: "store_import",
-      createdAt: daysAgo(20),
+      createdAt: daysAgo(6),
     },
     {
       id: "attr-2",
@@ -815,7 +815,7 @@ export function createSeedData(): MockDb {
       commissionAmountMinor: 1548,
       currency: "EUR",
       source: "store_import",
-      createdAt: daysAgo(12),
+      createdAt: daysAgo(3),
     },
     {
       id: "attr-3",
@@ -854,7 +854,7 @@ export function createSeedData(): MockDb {
       commissionAmountMinor: 1650,
       currency: "EUR",
       source: "store_import",
-      createdAt: daysAgo(8),
+      createdAt: daysAgo(1),
     },
     {
       id: "attr-6",

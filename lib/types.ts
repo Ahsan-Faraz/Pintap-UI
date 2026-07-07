@@ -392,6 +392,37 @@ export interface RecommenderKpis {
   currency: string;
 }
 
+export type RecommenderDashboardRange = "7d" | "30d" | "all";
+
+export interface RecommenderDashboardDay {
+  key: string;
+  label: string;
+  commissionMinor: number;
+}
+
+export interface RecommenderTopLinkRow {
+  linkId: string;
+  name: string;
+  imageUrl: string | null;
+  storeName: string | null;
+  campaignName: string | null;
+  clicks: number;
+  orders: number;
+  earnedMinor: number;
+}
+
+export interface RecommenderDashboard {
+  range: RecommenderDashboardRange;
+  commissionMinor: number;
+  commissionGrowthPercent: number | null;
+  clicks: number;
+  orders: number;
+  conversionRate: number;
+  currency: string;
+  dailyCommission: RecommenderDashboardDay[];
+  topLinks: RecommenderTopLinkRow[];
+}
+
 export interface MerchantKpis {
   activeCampaigns: number;
   issuedLinks: number;
@@ -400,6 +431,30 @@ export interface MerchantKpis {
   commissionOwedMinor: number;
   fundedBalanceMinor: number;
   currency: string;
+}
+
+export type MerchantDashboardRange = "30d" | "90d" | "year";
+
+export interface MerchantDashboardTopRecommender {
+  id: string;
+  firstName: string;
+  lastName: string;
+  orders: number;
+  revenueMinor: number;
+}
+
+export interface MerchantDashboard {
+  range: MerchantDashboardRange;
+  revenueMinor: number;
+  revenueGrowthPercent: number | null;
+  orders: number;
+  ordersGrowthPercent: number | null;
+  clicks: number;
+  clicksGrowthPercent: number | null;
+  activeRecommenders: number;
+  newRecommenders: number;
+  currency: string;
+  topRecommender: MerchantDashboardTopRecommender | null;
 }
 
 /** Per-campaign performance for the merchant campaigns listing. */

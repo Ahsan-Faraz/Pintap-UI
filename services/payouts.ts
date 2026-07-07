@@ -48,6 +48,8 @@ function validateAccountInput(input: PayoutAccountInput): PayoutAccountInput {
 
 export interface PayoutsService {
   getOverview(userId: string): Promise<PayoutOverview>;
+  /** Payout batches for the signed-in recommender (history). */
+  listMyPayoutBatches(userId: string): Promise<PayoutBatch[]>;
   /** Create/update the signed-in user's bank details for manual payouts. */
   savePayoutAccount(input: PayoutAccountInput): Promise<PayoutAccount>;
   /** User: move their entire available balance into a 'requested' payout batch. */
@@ -79,6 +81,14 @@ const mock: PayoutsService = {
       account,
       ledger,
     };
+  },
+
+  async listMyPayoutBatches(userId) {
+    await delay();
+    const d = db();
+    return d.payoutBatches
+      .filter((b) => b.userId === userId)
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
   },
 
   async savePayoutAccount(input) {
@@ -390,6 +400,17 @@ const real: PayoutsService = {
       account: accountRes.data ? mapAccount(accountRes.data) : null,
       ledger,
     };
+  },
+
+  async listMyPayoutBatches(userId) {
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase
+      .from("payout_batches")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map(mapBatch);
   },
 
   async savePayoutAccount(input) {
